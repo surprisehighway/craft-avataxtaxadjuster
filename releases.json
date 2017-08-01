@@ -1,4 +1,13 @@
 [
+
+	{
+	    "version": "1.0.1",
+	    "downloadUrl": "https://github.com/surprisehighway/craft-avataxtaxadjuster/archive/master.zip",
+	    "date": "2017-07-31T05:31:39.458Z",
+	    "notes": [
+	        "[Fixed] Replaced missing source for /vendor/avalara/avataxclient and re-tracked in git."
+	    ]
+	},
     {
         "version": "1.0.0",
         "downloadUrl": "https://github.com/surprisehighway/craft-avataxtaxadjuster/archive/master.zip",
