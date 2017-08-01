@@ -2,6 +2,9 @@
 
 Calculates tax rates with Avalara AvaTax
 
+This plugin is in beta and bugs may be present. Please document any issues you encounter at our [Github Issues](https://github.com/surprisehighway/craft-avataxtaxadjuster/issues) page.
+
+
 ## Installation
 
 To install the AvaTax Tax Adjuster plugin, follow these steps:
