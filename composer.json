@@ -1,0 +1,25 @@
+{
+	"name": "surprisehighway/craft-avataxtaxadjuster",
+	"description": "Calculate tax using Avalara&#39;s AvaTax",
+	"type": "craft-plugin",
+	"authors": [
+		{
+			"name": "Rob Knecht",
+			"homepage": "https://github.com/rmknecht"
+		},
+		{
+			"name": "Surprise Highway",
+			"homepage": "https://github.com/surprisehighway"
+		}
+	],
+	"repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/rmknecht/AvaTax-REST-V2-PHP-SDK"
+        }
+    ],
+	"require": {
+		"composer/installers": "~1.0",
+		"avalara/avataxclient": "dev-guzzle"
+	}
+}
