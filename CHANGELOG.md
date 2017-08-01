@@ -1,6 +1,6 @@
 # Avatax Tax Adjuster Changelog
 
-## 0.0.1 -- 2017.06.07
+## 1.0.0 -- 2017.06.07
 
 * Initial release
 
