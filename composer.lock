@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "e80ce53ec1ebc28391697c102e2a1599",
+    "content-hash": "db97eb2f473381cd5f7adc4883628b61",
     "packages": [
         {
             "name": "avalara/avataxclient",
@@ -71,7 +71,7 @@
                 "source": "https://github.com/avadev/AvaTax-REST-V2-PHP-SDK",
                 "issues": "https://github.com/avadev/AvaTax-REST-V2-PHP-SDK/issues"
             },
-            "time": "2017-06-22 18:31:56"
+            "time": "2017-06-22T18:31:56+00:00"
         },
         {
             "name": "composer/installers",
