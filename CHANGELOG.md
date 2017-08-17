@@ -1,5 +1,11 @@
 # Avatax Tax Adjuster Changelog
 
+## 1.0.3 -- 2017.08.17
+
+### Fixed
+
+* Resolved createSalesInvoice error.
+
 ## 1.0.2 -- 2017.08.16
 
 ### Fixed

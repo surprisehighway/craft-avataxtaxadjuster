@@ -103,7 +103,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     {
         $client = $this->createClient();
 
-        $tb = new \Avatax\TransactionBuilder($client, $this->getCompanyCode(), \Avatax\DocumentType::C_SALESINVOICE, "DEFAULT");
+        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESINVOICE, "DEFAULT");
 
         $tb->withCommit();
 
