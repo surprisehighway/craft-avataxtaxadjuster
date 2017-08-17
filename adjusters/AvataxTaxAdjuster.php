@@ -23,7 +23,7 @@ class AvataxTaxAdjuster implements Commerce_AdjusterInterface {
 
       $taxAdjuster->type = "Tax";
       $taxAdjuster->name = "Sales Tax";
-      $taxAdjuster->description = "Adds "+$salesTax+" of tax to the order";
+      $taxAdjuster->description = "Adds $".$salesTax." of tax to the order";
       $taxAdjuster->amount = +$salesTax;
       $taxAdjuster->orderId = $order->id;
       // If your Adjuster affects lineItems rather than the total, you record the ids here

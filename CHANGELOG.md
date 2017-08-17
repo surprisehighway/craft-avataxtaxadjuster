@@ -1,5 +1,11 @@
 # Avatax Tax Adjuster Changelog
 
+## 1.0.2 -- 2017.08.16
+
+### Fixed
+
+* Resolved concatenation syntax bug.
+
 ## 1.0.1 -- 2017.07.31
 
 ### Fixed
