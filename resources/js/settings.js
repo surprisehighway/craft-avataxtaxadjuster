@@ -9,7 +9,7 @@ Avatax.settings = {
 	connectionTest: function(e) {
 		var message;
 		var data = $('form[data-confirm-unload]').serialize();
-		var self = Avatax.connectionTest;
+		var self = Avatax.settings;
 
 		self.showLoading();
 
