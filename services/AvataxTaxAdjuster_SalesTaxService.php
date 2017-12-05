@@ -112,35 +112,54 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         return $totalTax;
     }
 
+    /**
+     * @param array $settings
+     * @return object or boolean
+     *
+     *  From any other plugin file, call it like this:
+     *  craft()->avataxTaxAdjuster_salesTax->connectionTest()
+     *
+     * Creates a new client with the given settings and tests the connection.
+     * See https://developer.avalara.com/api-reference/avatax/rest/v2/methods/Utilities/Ping/
+     *
+     */
+    public function connectionTest($settings)
+    {
+        $client = $this->createClient($settings);
+
+        return $client->ping();
+    }
 
     /**
      * @return object $client
      */
-    private function createClient()
+    private function createClient($settings = null)
     {
+        $settings = ($settings) ? $settings : $this->settings;
+
         $siteName = trim( craft()->getSiteName(), ';' );
 
-        if($this->settings['environment'] == 'production')
+        if($settings['environment'] == 'production')
         {
-            if($this->settings['accountId'] && $this->settings['licenseKey'])
+            if($settings['accountId'] && $settings['licenseKey'])
             {
                 // Create a new client
                 $client = new AvaTaxClient($siteName, '1.0', 'localhost', 'production');
 
-                $client->withLicenseKey( $this->settings['accountId'], $this->settings['licenseKey'] );
+                $client->withLicenseKey( $settings['accountId'], $settings['licenseKey'] );
 
                 return $client;
             }
         }
 
-        if($this->settings['environment'] == 'sandbox')
+        if($settings['environment'] == 'sandbox')
         {
-            if($this->settings['sandboxAccountId'] && $this->settings['sandboxLicenseKey'])
+            if($settings['sandboxAccountId'] && $settings['sandboxLicenseKey'])
             {
                 // Create a new client
                 $client = new AvaTaxClient($siteName, '1.0', 'localhost', 'sandbox');
 
-                $client->withLicenseKey( $this->settings['sandboxAccountId'], $this->settings['sandboxLicenseKey'] );
+                $client->withLicenseKey( $settings['sandboxAccountId'], $settings['sandboxLicenseKey'] );
 
                 return $client;
             }

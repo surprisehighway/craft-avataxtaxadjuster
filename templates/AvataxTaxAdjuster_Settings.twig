@@ -14,6 +14,9 @@
 
 {% import '_includes/forms' as forms %}
 
+{% includeCssResource 'avataxtaxadjuster/css/settings.css' %}
+{% includejsresource 'avataxtaxadjuster/js/settings.js' %}
+
 <h2>Avatax Environment</h2>
 
 {{ forms.selectField({
@@ -28,6 +31,9 @@
         }
     })
 }}
+
+<input id="test-connection-btn" type="button" class="btn" value="{{ 'Test Connection' | t }}">
+<div id="test-connection-spinner" class="spinner hidden"></div>
 
 <hr>
 
