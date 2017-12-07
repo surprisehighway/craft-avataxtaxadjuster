@@ -55,7 +55,7 @@ class AvataxTaxAdjuster_UtilitiesController extends BaseController
 		{
 			$dateTimePattern = '/^[0-9]{4}\/[0-9]{2}\/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}/';
 
-			$logEntriesByRequest = array();
+			$logEntries = array();
 
 			$currentLogFileName = $this->currentLogFileName;
 			$currentFullPath = craft()->path->getLogPath().$currentLogFileName;
@@ -70,8 +70,6 @@ class AvataxTaxAdjuster_UtilitiesController extends BaseController
 
 				foreach ($requests as $request)
 				{
-					$logEntries = array();
-
 					$logChunks = preg_split('/^(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}) \[(.*?)\] \[(.*?)\] /m', $request, null, PREG_SPLIT_DELIM_CAPTURE);
 
 					// Ignore the first chunk
@@ -93,32 +91,35 @@ class AvataxTaxAdjuster_UtilitiesController extends BaseController
 						// This is a non-devMode log entry.
 						$logEntryModel->message = str_replace('[Forced] ', '', $rowContents[0]);
 
-						
-						// Check for response marker
-						$response = explode('[response] ', $logEntryModel->message);
+						// Convert model to array
+						$logEntryArray = ArrayHelper::flattenArray($logEntryModel);
+
+						// Check for custom markers
+						$response = explode('[response] ', $logEntryArray['message']);
 
 						if(!empty($response[1]))
 						{
-							// hijack post attribute to format response
-							$logEntryModel->post = 'Response: '.$response[1];
-						 	$logEntryModel->message = $response[0];
+							$logEntryArray['response'] = $response[1];
+						 	$logEntryArray['message'] = $response[0];
+						}
+
+						$request = explode('[request] ', $logEntryArray['message']);
+
+						if(!empty($request[1]))
+						{
+							$logEntryArray['request'] = $request[1];
+						 	$logEntryArray['message'] = $request[0];
 						}
 
 						// And save the log entry.
-						array_unshift($logEntries, $logEntryModel);
-					}
-
-					if ($logEntries)
-					{
-						// Put these logs at the top
-						array_unshift($logEntriesByRequest, $logEntries);
+						array_unshift($logEntries, $logEntryArray);
 					}
 				}
 			}
 		}
 
 		$this->renderTemplate('avataxtaxadjuster/settings/logs', array(
-			'logEntries' => arrayHelper::flattenArray($logEntriesByRequest)
+			'logEntries' => $logEntries
 		));
 	}
 

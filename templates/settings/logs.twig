@@ -20,7 +20,7 @@
 
     <a href="{{ actionUrl('avataxTaxAdjuster_Utilities/clearLogs') }}" class="btn right">Clear Logs</a>
 
-    <h2>Avatax Logs</h2>
+    <h2>AvaTax Logs</h2>
     <table class="data fullwidth">
         <tr>
             <th class="light">Date</th>
@@ -30,9 +30,17 @@
             <tr>
                 <td>{{ logEntry.dateTime.format('Y-m-d H:i:s') }}</th>
                 <td>
-                    [{{ logEntry.level|ucfirst }}] {% if logEntry.message %}{{ logEntry.message }}{% endif %}
-                    {% if logEntry.post %}
-                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.post }}</textarea>
+                    [{{ logEntry.level|ucfirst }}]
+                    {% if logEntry.message %}
+                        {{ logEntry.message }}
+                    {% endif %}
+                    {% if logEntry.request %}
+                        <small class="light log-label">Request:</small>
+                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.request }}</textarea>
+                    {% endif %}
+                    {% if logEntry.response %}
+                        <small class="light log-label">Response:</small>
+                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.response }}</textarea>
                     {% endif %}
                 </td>
             </tr>
