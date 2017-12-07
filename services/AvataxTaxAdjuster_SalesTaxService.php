@@ -19,6 +19,8 @@ use Avalara\AvaTaxClient as AvaTaxClient;
 
 class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 {
+    private $debug = false;
+
     public $settings = array();
 
     public function __construct()
@@ -41,6 +43,8 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         $settings['sandboxCompanyCode'] = $plugin->getSettings()->getAttribute('sandboxCompanyCode');
 
         $settings['environment'] = $plugin->getSettings()->getAttribute('environment');
+
+        $this->debug = $plugin->getSettings()->getAttribute('debug');
 
         return $settings;
     }
@@ -166,7 +170,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         }
 
         // Don't have credentials
-        Craft::log('Avatax Account Credentials not found', LogLevel::Error, false, 'AvataxTaxAdjuster');
+        AvataxTaxAdjusterPlugin::log('Avatax Account Credentials not found', LogLevel::Error, true);
 
         // throw a craft exception which displays the error cleanly
         throw new HttpException(500, 'Avatax Account Credentials not found');
@@ -239,15 +243,20 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 
         $t = $t->create();
 
+        if($this->debug)
+        {
+            AvataxTaxAdjusterPlugin::log('Method called: TransactionBuilder->create(): [response] '.json_encode($t), LogLevel::Trace, true);
+        }
+
         if(isset($t->totalTax))
         {
             return $t->totalTax;
         }
 
+        AvataxTaxAdjusterPlugin::log('Request to avatax.com failed', LogLevel::Error, true);
+
         // Request failed
         throw new HttpException(400, 'Request could not be completed');
-
-        Craft::log('Request to avatax.com failed', LogLevel::Error, false, 'AvataxTaxAdjuster');
 
         return false;
     }

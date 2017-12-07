@@ -1,0 +1,141 @@
+{#
+/**
+ * AvaTax Tax Adjuster plugin for Craft Commerce
+ *
+ * AvataxTaxAdjuster-Settings.twig
+ *
+ * @author    Rob Knecht
+ * @author    Mike Kroll
+ * @copyright Copyright (c) 2017 Surprise Highway
+ * @link      https://github.com/surprisehighway
+ * @package   AvataxTaxAdjuster
+ * @since     0.0.1
+ */
+#}
+{% extends "avataxtaxadjuster/settings/_layout" %}
+
+{% set selectedTab = 'settings' %}
+
+{% set fullPageForm = true %}
+
+{% import '_includes/forms' as forms %}
+
+{% block content %}
+
+    <input type="hidden" name="action" value="plugins/savePluginSettings">
+    <input type="hidden" name="pluginClass" value="avataxTaxAdjuster">
+
+    {% namespace 'settings' %}
+
+    <h2>Avatax Environment</h2>
+
+    {{ forms.selectField({
+        label: '',
+        instructions: 'Select your AvaTax environment.',
+        id: 'environment',
+        name: 'environment',
+        value: settings['environment'],
+        'options': {
+            'production' : 'Production',
+            'sandbox' : 'Sandbox'
+            }
+        })
+    }}
+
+    <input id="test-connection-btn" type="button" class="btn" value="{{ 'Test Connection' | t }}">
+    <div id="test-connection-spinner" class="spinner hidden"></div>
+
+    <hr>
+
+    <h2>Production Account</h2>
+
+    {{ forms.textField({
+        label: 'Account ID',
+        instructions: 'Enter your Avalara account ID here. It will be a ten-digit number (e.g. 1100012345).',
+        id: 'accountId',
+        name: 'accountId',
+        value: settings['accountId'],
+        errors: settings.getErrors('accountId')
+        })
+    }}
+
+    {{ forms.textField({
+        label: 'License Key',
+        instructions: 'Enter your license key here. It will be a 16-character string (e.g. 1A2B3C4D5E6F7G8H).',
+        id: 'licenseKey',
+        name: 'licenseKey',
+        value: settings['licenseKey'],
+        errors: settings.getErrors('licenseKey')
+        })
+    }}
+
+    {{ forms.textField({
+        label: 'Company Code',
+        instructions: 'Enter your company code here. See: https://help.avalara.com/004_AvaTax_Integrations/002_All_About_Company_Codes',
+        id: 'companyCode',
+        name: 'companyCode',
+        value: settings['companyCode'],
+        errors: settings.getErrors('companyCode')
+        })
+    }}
+
+    <hr>
+
+    <h2>Sandbox Account</h2>
+
+    {{ forms.textField({
+        label: 'Account ID',
+        instructions: 'Enter your Avalara account ID here.',
+        id: 'sandboxAccountId',
+        name: 'sandboxAccountId',
+        value: settings['sandboxAccountId'],
+        errors: settings.getErrors('sandboxAccountId')
+        })
+    }}
+
+    {{ forms.textField({
+        label: 'License Key',
+        instructions: 'Enter your license key here.',
+        id: 'sandboxLicenseKey',
+        name: 'sandboxLicenseKey',
+        value: settings['sandboxLicenseKey'],
+        errors: settings.getErrors('sandboxLicenseKey')
+        })
+    }}
+
+    {{ forms.textField({
+        label: 'Company Code',
+        instructions: 'Enter your company code here.',
+        id: 'sandboxCompanyCode',
+        name: 'sandboxCompanyCode',
+        value: settings['sandboxCompanyCode'],
+        errors: settings.getErrors('sandboxCompanyCode')
+        })
+    }}
+
+    <hr>
+
+    <h2>Debugging</h2>
+
+    <div class="field">
+        <div class="heading">
+            <label for="settings-debug">Enable Debugging</label>
+            <div class="instructions">
+                <p class="light">By default only errors are logged. Enable full debugging to log all interaction with the AvaTax API.<br>This should only be enabled during development or when troubleshooting a problem.</p>
+            </div>
+        </div>
+
+        {{ forms.lightswitch({
+            label: 'Debuging Active',
+            instructions: 'Enable for full debug logging.',
+            id: 'debug',
+            name: 'debug',
+            on: settings['debug'],
+            errors: settings.getErrors('debug')
+            })
+        }}
+    </div>
+
+    {% endnamespace %}
+
+{% endblock %}

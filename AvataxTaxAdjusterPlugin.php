@@ -238,30 +238,18 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
             'sandboxAccountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
             'sandboxLicenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
             'sandboxCompanyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
-
+            'debug' => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
         );
     }
 
     /**
-     * Returns the HTML that displays your plugin’s settings.
-     *
-     * @return mixed
-     */
-    public function getSettingsHtml()
-    {
-       return craft()->templates->render('avataxtaxadjuster/AvataxTaxAdjuster_Settings', array(
-           'settings' => $this->getSettings()
-       ));
-    }
-
-
-    /**
-     * Returns the HTML that displays your plugin’s settings.
+     * Returns a URL to your plugin’s settings.
      *
      * @return string
      */
     public function getSettingsUrl()
     {
+        return 'avataxtaxadjuster/settings';
     }
 
     /**
@@ -277,6 +265,19 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         // Modify $settings here...
 
         return $settings;
+    }
+
+    /**
+     * Define custom CP routes.
+     *
+     * @return array
+     */
+    public function registerCpRoutes()
+    {
+        return array(
+            'avataxtaxadjuster/settings' => array('action' => 'avataxTaxAdjuster/settings'),
+            'avataxtaxadjuster/logs' => array('action' => 'avataxTaxAdjuster_Utilities/logs')
+        );
     }
 
     public function commerce_registerOrderAdjusters(){

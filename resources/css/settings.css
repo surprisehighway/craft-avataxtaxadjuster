@@ -1,3 +1,10 @@
 .modal.settings-modal-message {
 	width: 500px;
 }
+
+.text.log-response {
+	margin-top: 5px;
+	font-family: Menlo, monospace;
+    font-size: 0.9em !important;
+    white-space: pre;
+}

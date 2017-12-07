@@ -1,0 +1,42 @@
+{#
+/**
+ * AvaTax Tax Adjuster plugin for Craft Commerce
+ *
+ * AvataxTaxAdjuster-Settings.twig
+ *
+ * @author    Rob Knecht
+ * @author    Mike Kroll
+ * @copyright Copyright (c) 2017 Surprise Highway
+ * @link      https://github.com/surprisehighway
+ * @package   AvataxTaxAdjuster
+ * @since     0.0.1
+ */
+#}
+{% extends "avataxtaxadjuster/settings/_layout" %}
+
+{% set selectedTab = 'logs' %}
+
+{% block content %}
+
+    <a href="{{ actionUrl('avataxTaxAdjuster_Utilities/clearLogs') }}" class="btn right">Clear Logs</a>
+
+    <h2>Avatax Logs</h2>
+    <table class="data fullwidth">
+        <tr>
+            <th class="light">Date</th>
+            <th class="light" width="85%">Message</th>
+        </tr>   
+        {% for logEntry in logEntries %}
+            <tr>
+                <td>{{ logEntry.dateTime.format('Y-m-d H:i:s') }}</th>
+                <td>
+                    [{{ logEntry.level|ucfirst }}] {% if logEntry.message %}{{ logEntry.message }}{% endif %}
+                    {% if logEntry.post %}
+                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.post }}</textarea>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}
