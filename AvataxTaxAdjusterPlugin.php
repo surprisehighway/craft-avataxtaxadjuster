@@ -238,6 +238,8 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
             'sandboxAccountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
             'sandboxLicenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
             'sandboxCompanyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
+            'enableTaxCalculation' => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
+            'enableCommitting' => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
             'debug' => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
         );
     }

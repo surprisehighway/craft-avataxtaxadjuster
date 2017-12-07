@@ -27,7 +27,7 @@
 
     {% namespace 'settings' %}
 
-    <h2>Avatax Environment</h2>
+    <h2>AvaTax Environment</h2>
 
     {{ forms.selectField({
         label: '',
@@ -115,19 +115,55 @@
 
     <hr>
 
+    <h2>AvaTax Options</h2>
+    
+    <div class="field">
+        <div class="heading">
+            <label for="settings-enableTaxCalculation">Tax Calculation Enabled</label>
+            <div class="instructions">
+                <p class="light">Disable this setting to disable tax calculations.</p>
+            </div>
+        </div>
+
+        {{ forms.lightswitch({
+            id: 'enableTaxCalculation',
+            name: 'enableTaxCalculation',
+            on: settings['enableTaxCalculation'],
+            errors: settings.getErrors('enableTaxCalculation')
+            })
+        }}
+    </div>
+
+    <div class="field">
+        <div class="heading">
+            <label for="settings-enableCommitting">Comitting Enabled</label>
+            <div class="instructions">
+                <p class="light">Disable this setting to disable document committing.<br>Read-only Tax calculations will still be performed if enabled, but no transactions will be committed.</p>
+            </div>
+        </div>
+
+        {{ forms.lightswitch({
+            id: 'enableCommitting',
+            name: 'enableCommitting',
+            on: settings['enableCommitting'],
+            errors: settings.getErrors('enableCommitting')
+            })
+        }}
+    </div>
+
+    <hr>
+
     <h2>Debugging</h2>
 
     <div class="field">
         <div class="heading">
-            <label for="settings-debug">Enable Debugging</label>
+            <label for="settings-debug">Debugging Enabled</label>
             <div class="instructions">
                 <p class="light">By default only errors are logged. Enable full debugging to log all interaction with the AvaTax API.<br>This should only be enabled during development or when troubleshooting a problem.</p>
             </div>
         </div>
 
         {{ forms.lightswitch({
-            label: 'Debuging Active',
-            instructions: 'Enable for full debug logging.',
             id: 'debug',
             name: 'debug',
             on: settings['debug'],

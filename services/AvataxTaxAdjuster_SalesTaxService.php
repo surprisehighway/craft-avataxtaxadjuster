@@ -32,19 +32,9 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     {
         $plugin = craft()->plugins->getPlugin('AvataxTaxAdjuster');
 
-        $settings = array();
+        $settings = $plugin->getSettings();
 
-        $settings['accountId'] = $plugin->getSettings()->getAttribute('accountId');
-        $settings['licenseKey'] = $plugin->getSettings()->getAttribute('licenseKey');
-        $settings['companyCode'] = $plugin->getSettings()->getAttribute('companyCode');
-
-        $settings['sandboxAccountId'] = $plugin->getSettings()->getAttribute('sandboxAccountId');
-        $settings['sandboxLicenseKey'] = $plugin->getSettings()->getAttribute('sandboxLicenseKey');
-        $settings['sandboxCompanyCode'] = $plugin->getSettings()->getAttribute('sandboxCompanyCode');
-
-        $settings['environment'] = $plugin->getSettings()->getAttribute('environment');
-
-        $this->debug = $plugin->getSettings()->getAttribute('debug');
+        $this->debug = $settings->debug;
 
         return $settings;
     }
@@ -81,6 +71,16 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     public function createSalesOrder($order)
     {
+        if(!$this->settings->getAttribute('enableTaxCalculation'))
+        {
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log(__FUNCTION__.'(): Tax Calculation is disabled.', LogLevel::Info, true);
+            }
+
+            return false;
+        }
+
         $client = $this->createClient();
 
         $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESORDER, "DEFAULT");
@@ -105,6 +105,16 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     public function createSalesInvoice($order)
     {
+        if(!$this->settings['enableCommitting'])
+        {
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log(__FUNCTION__.'(): Document Committing is disabled.', LogLevel::Info, true);
+            }
+
+            return false;
+        }
+
         $client = $this->createClient();
 
         $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESINVOICE, "DEFAULT");
@@ -241,11 +251,16 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             "FR"                        // Tax code for freight - Shipping only, common carrier - FOB destination
         );
 
+        if($this->debug)
+        {
+            $model = $t; // save the model for debug logging
+        }
+
         $t = $t->create();
 
         if($this->debug)
         {
-            AvataxTaxAdjusterPlugin::log('Method called: TransactionBuilder->create(): [response] '.json_encode($t), LogLevel::Trace, true);
+            AvataxTaxAdjusterPlugin::log('\Avalara\TransactionBuilder->create(): [request] '.json_encode((array)$model).' [response] '.json_encode($t), LogLevel::Trace, true);
         }
 
         if(isset($t->totalTax))
