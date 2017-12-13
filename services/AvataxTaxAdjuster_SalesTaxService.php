@@ -127,6 +127,67 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     }
 
     /**
+     * @param object Commerce_AddressModel $address
+     * @return object
+     *
+     *  From any other plugin file, call it like this:
+     *  craft()->avataxTaxAdjuster_salesTax->validateAddress()
+     *
+     * Validates and address
+     * See: https://developer.avalara.com/api-reference/avatax/rest/v2/methods/Addresses/ResolveAddressPost/
+     *
+     */
+    public function validateAddress($address)
+    {
+        if(!$this->settings['enableAddressValidation'])
+        {
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log(__FUNCTION__.'(): Address validation is disabled.', LogLevel::Info, true);
+            }
+
+            return false;
+        }
+
+        $request = array(
+            'line1' => $address->address1,
+            'line2' => $address->address2,
+            'line3' => '', 
+            'city' => $address->city,
+            'region' => $address->getState() ? $address->getState() ? $address->getState()->abbreviation : $address->getStateText() : '', 
+            'postalCode' => $address->zipCode,
+            'country' => $address->country->iso, 
+            'textCase' => 'Mixed',
+            'latitude' => '',
+            'longitude' => ''
+        );
+
+        extract($request);
+
+        $client = $this->createClient();
+
+        $response = $client->resolveAddress($line1, $line2, $line3, $city, $region, $postalCode, $country, $textCase, $latitude, $longitude);
+
+        if($this->debug)
+        {
+            AvataxTaxAdjusterPlugin::log('\Avalara\AvaTaxClient->resolveAddress(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+        }
+
+        if(isset($response->validatedAddresses) || isset($response->coordinates))
+        {
+            return true;
+        }
+
+        AvataxTaxAdjusterPlugin::log('Address validation failed.', LogLevel::Error, true);
+
+        // Request failed
+        throw new HttpException(400, 'Invalid address.');
+
+        return false;
+    }
+
+
+    /**
      * @param array $settings
      * @return object or boolean
      *
@@ -198,8 +259,13 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     private function getTotalTax($order, $transaction)
     {
 
-        $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
+        if($this->settings['enableAddressValidation'])
+        {
+            // Make sure we have a valid address before continuing.
+            $this->validateAddress($order->shippingAddress);
+        }
 
+        $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
 
         $t = $transaction->withAddress(
                 'shipFrom',

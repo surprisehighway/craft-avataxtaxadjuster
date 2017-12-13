@@ -38,6 +38,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         require __DIR__.'/vendor/autoload.php';
 
         craft()->on('commerce_orders.onBeforeOrderComplete', [$this, 'onBeforeOrderComplete']);
+        craft()->on('commerce_addresses.onBeforeSaveAddress', [$this, 'onBeforeSaveAddress']);
     }
 
     /**
@@ -50,6 +51,18 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         $order = $event->params['order'];
 
         craft()->avataxTaxAdjuster_salesTax->createSalesInvoice($order);
+    }
+
+    /**
+     * Raised before address has been saved.
+     * Validate an address in avatax.
+     */
+    public function onBeforeSaveAddress(Event $event)
+    {
+        /** @var Commerce_AddressModel $address */
+        $address = $event->params['address'];
+
+        craft()->avataxTaxAdjuster_salesTax->validateAddress($address);
     }
 
     /**
@@ -240,6 +253,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
             'sandboxCompanyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
             'enableTaxCalculation' => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
             'enableCommitting' => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
+            'enableAddressValidation' => array( AttributeType::Bool, 'label' => 'Enable Address Validation', 'default' => true, 'required' => false),
             'debug' => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
         );
     }
