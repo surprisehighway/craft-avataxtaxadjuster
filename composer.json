@@ -20,6 +20,6 @@
     ],
 	"require": {
 		"composer/installers": "~1.0",
-		"avalara/avataxclient": "dev-guzzle"
+		"avalara/avataxclient": "17.8.1.120"
 	}
 }

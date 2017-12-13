@@ -1,0 +1,13 @@
+.modal.settings-modal-message {
+	width: 500px;
+}
+
+.log-label {
+	display: block;
+	margin: 5px 0 3px;
+}
+.text.log-response {
+	font-family: Menlo, monospace;
+    font-size: 0.9em !important;
+    white-space: pre;
+}
