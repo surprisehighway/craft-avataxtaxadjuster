@@ -151,6 +151,23 @@
         }}
     </div>
 
+    <div class="field">
+        <div class="heading">
+            <label for="settings-enableTaxCalculation">Address Validation Enabled</label>
+            <div class="instructions">
+                <p class="light">Disable this setting to disable AvaTax address validation.</p>
+            </div>
+        </div>
+
+        {{ forms.lightswitch({
+            id: 'enableAddressValidation',
+            name: 'enableAddressValidation',
+            on: settings['enableAddressValidation'],
+            errors: settings.getErrors('enableAddressValidation')
+            })
+        }}
+    </div>
+
     <hr>
 
     <h2>Debugging</h2>
