@@ -58,6 +58,26 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     }
 
     /**
+     * @return string $customerCode
+     */
+    private function getCustomerCode($order)
+    {
+        $customerCode = 'GUEST';
+
+        if(!empty($order->email))
+        {
+            $customerCode = $order->email;
+
+            if(empty($order->customer->userId))
+            {
+                $customerCode .= ' (GUEST)';
+            }
+        }
+
+        return $customerCode;
+    }
+
+    /**
      * @param object Commerce_OrderModel $order
      * @return object
      *
@@ -83,7 +103,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 
         $client = $this->createClient();
 
-        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESORDER, "DEFAULT");
+        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESORDER, $this->getCustomerCode($order));
 
         $totalTax = $this->getTotalTax($order, $tb);
 
@@ -117,7 +137,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 
         $client = $this->createClient();
 
-        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESINVOICE, "DEFAULT");
+        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESINVOICE, $this->getCustomerCode($order));
 
         $tb->withCommit();
 
