@@ -23,15 +23,35 @@ Calculate and add sales tax to an order's base tax using Avalara's AvaTax servic
 
 ## Configuring AvaTax Tax Adjuster
 
-1. Copy config.php from the `avataxtaxadjuster` directory to your craft/config folder and rename it to `avataxtaxadjuster.php`
+1. Copy `config.php` from the `avataxtaxadjuster` directory to your craft/config folder and rename it to `avataxtaxadjuster.php`
 2. Specify a valid orgin address within the `shipFrom` array
-3. Visit `/admin/settings/plugins/avataxtaxadjuster` and provide your avatax account information. Sanbox account credentials are optional.
-4. Selecting "Sandbox" or "Production" will enable the chosen environment.
+
+
+## Configuring AvaTax Account Connection
+
+1. Visit the settings page at `Settings > Avatax Tax Adjuster`
+2. Enter your the Account ID, License Key, and Company code credentials for each environment.
+3. Selecting *Sandbox* or *Production* will enable the chosen environment.
+4. Click the *Test Connection* button to verify your connection.
+5. Click the *Save* button to save your settings.
+
+![Account Settings](resources/plugin-settings.png)
+
+## Configuring AvaTax Plugin Options
+
+1. Visit the settings page at `Settings > Avatax Tax Adjuster`
+2. *Tax Calculation Enabled* - enable or disable tax calculation independantly of other settings.
+3. *Committing Enabled* - enable or disable document committing.
+4. *Address Validation Enabled* - enable or disable Avalara's address verification.
+5. *Debugging enabled* - while setting up and testing enable debugging to log all API interactions. Be sure to disable once live.
+6. Click the *Save* button to save your settings.
+
+![Plugin Options](resources/plugin-options.png)
 
 ## Using AvaTax Tax Adjuster
 
-1. Visit `/admin/commerce/settings/taxcategories/'. A tax category with the handle "avatax" should exist, if not, create one.
-2. Visit `/admin/commerce/settings/producttypes'. For each product type to use tax rates provided by Avalara, select the AvaTax category from the "Available Tax Categories" field.
+1. Visit `Commerce > Settings > Tax Categories`. A tax category with the handle "avatax" should exist, if not, create one.
+2. Visit `Commerce > Settings > Product Types`. For each product type to use tax rates provided by Avalara, select the AvaTax category from the "Available Tax Categories" field.
 
 ![Product Tax Category](resources/tax-category.png)
 
