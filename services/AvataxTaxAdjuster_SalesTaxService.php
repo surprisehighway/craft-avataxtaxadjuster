@@ -78,6 +78,19 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     }
 
     /**
+     * @return string $transactionCode
+     *
+     * Use the prefixed order number as the document code so that
+     * we can reference it again for subsequent calls if needed.
+     */
+    private function getTransactionCode($order)
+    {
+        $prefix = 'cr_';
+
+        return $prefix.$order->number;
+    }
+
+    /**
      * @param object Commerce_OrderModel $order
      * @return object
      *
@@ -144,6 +157,52 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         $totalTax = $this->getTotalTax($order, $tb);
 
         return $totalTax;
+    }
+
+    /**
+     * @param object Commerce_OrderModel $order
+     * @return object
+     *
+     * Voids a sales invoice
+     * See "Voiding Documents" https://developer.avalara.com/avatax/voiding-documents/
+     *
+     */
+    public function voidTransaction($order)
+    {
+        $client = $this->createClient();
+
+        $companyCode = $this->getCompanyCode();
+        $transactionCode = $this->getTransactionCode($order);
+
+        $model = array(
+            'code' => \Avalara\VoidReasonCode::C_DOCVOIDED,
+            'commit' => true
+        );
+
+        $response = $client->voidTransaction($companyCode, $transactionCode, $model);
+
+        if($this->debug)
+        {
+            $request = array(
+                'companyCode' => $companyCode,
+                'transactionCode' => $transactionCode
+            );
+
+            $request = array_merge($request, $model);
+
+            AvataxTaxAdjusterPlugin::log('\Avalara\Client->voidTransaction(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+        }
+
+        if(is_array($response) && isset($response->status) && $response->status == 'Cancelled')
+        {
+            AvataxTaxAdjusterPlugin::log('Document Code '.$transactionCode.' was successfully cancelled.', LogLevel::Info, true);
+
+            return true;
+        }
+
+        AvataxTaxAdjusterPlugin::log('Document Code '.$transactionCode.' could not be cancelled.', LogLevel::Error, true);
+
+        return false;
     }
 
     /**
@@ -278,7 +337,6 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     private function getTotalTax($order, $transaction)
     {
-
         if($this->settings['enableAddressValidation'])
         {
             // Make sure we have a valid address before continuing.
@@ -287,7 +345,10 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 
         $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
 
-        $t = $transaction->withAddress(
+        $t = $transaction->withTransactionCode(
+                $this->getTransactionCode($order)
+            )
+            ->withAddress(
                 'shipFrom',
                 $shipFrom['street1'],
                 $shipFrom['street2'],

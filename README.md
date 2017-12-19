@@ -57,6 +57,12 @@ Calculate and add sales tax to an order's base tax using Avalara's AvaTax servic
 
 After completing the installation and configuration, AvaTax will calculate and apply sales tax to all orders with a valid shipping address.
 
+## Refunds
+
+Craft Commerce only supports refunds for completed transactions if the [payment gateway](https://craftcommerce.com/support/which-payment-gateways-do-you-support) supports refunds. If refunds are supported for an order Craft displays a "Refund" button in the order’s Transaction history. Triggering a refund in this way will void the corresponding AvaTax transaction.
+
+Partial refunds, returns, or any other changes must be done manually via the AvaTax website.
+
 ## AvaTax Tax Adjuster Roadmap
 
 Some things to do, and ideas for potential features:

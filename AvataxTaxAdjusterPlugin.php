@@ -39,6 +39,8 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
 
         craft()->on('commerce_orders.onBeforeOrderComplete', [$this, 'onBeforeOrderComplete']);
         craft()->on('commerce_addresses.onBeforeSaveAddress', [$this, 'onBeforeSaveAddress']);
+        craft()->on('commerce_payments.onRefundTransaction', [$this, 'onRefundTransaction']);
+
     }
 
     /**
@@ -63,6 +65,21 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         $address = $event->params['address'];
 
         craft()->avataxTaxAdjuster_salesTax->validateAddress($address);
+    }
+
+    /**
+     * Raised after a transaction was attempted to be refunded.
+     * Void a transaction in.
+     */
+    public function onRefundTransaction(Event $event)
+    {
+        /** @var Commerce_TransactionModel $transaction */
+        $transaction = $event->params['transaction'];
+
+        if($transaction->status == 'success')
+        {
+            craft()->avataxTaxAdjuster_salesTax->voidTransaction($transaction->order);
+        }
     }
 
     /**
