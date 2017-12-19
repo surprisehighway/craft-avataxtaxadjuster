@@ -380,11 +380,17 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
                     $taxCode = $lineItem->purchasable->product->avataxTaxCode ? $lineItem->purchasable->product->avataxTaxCode : 'P0000000';
                 }
 
+                $itemCode = $lineItem->id;
+
+                if(!empty($lineItem->sku)) {
+                    $itemCode = $lineItem->sku;
+                }
+
                // amount, $quantity, $itemCode, $taxCode)
                $t = $t->withLine(
                     $lineItem->subtotal,    // Total amount for the line item
                     $lineItem->qty,         // Quantity
-                    $lineItem->id,          // Item Code
+                    $itemCode,              // Item Code
                     $taxCode                // Tax Code - System or Custom Tax Code. Default (P0000000) is assumed.
                 );
            }
