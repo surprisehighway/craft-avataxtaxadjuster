@@ -344,6 +344,8 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         }
 
         $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
+        $defaultTaxCode = craft()->config->get('defaultTaxCode', 'avataxtaxadjuster');
+        $defaultShippingCode = craft()->config->get('defaultShippingCode', 'avataxtaxadjuster');
 
         $t = $transaction->withTransactionCode(
                 $this->getTransactionCode($order)
@@ -374,10 +376,10 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             // Our product has the avatax tax category specified
             if($lineItem->taxCategory == 'Avatax'){
 
-                $taxCode = 'P0000000';
+                $taxCode = $defaultTaxCode ? $defaultTaxCode : 'P0000000';
 
                 if(isset($lineItem->purchasable->product->avataxTaxCode)) {
-                    $taxCode = $lineItem->purchasable->product->avataxTaxCode ? $lineItem->purchasable->product->avataxTaxCode : 'P0000000';
+                    $taxCode = $lineItem->purchasable->product->avataxTaxCode ? $lineItem->purchasable->product->avataxTaxCode : $defaultTaxCode;
                 }
 
                 $itemCode = $lineItem->id;
@@ -391,17 +393,19 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
                     $lineItem->subtotal,    // Total amount for the line item
                     $lineItem->qty,         // Quantity
                     $itemCode,              // Item Code
-                    $taxCode                // Tax Code - System or Custom Tax Code. Default (P0000000) is assumed.
+                    $taxCode                // Tax Code - Default or Custom Tax Code.
                 );
            }
         }
 
         // Add shipping cost as line-item
+        $shippingTaxCode = $defaultShippingCode ? $defaultShippingCode : 'FR';
+
         $t = $t->withLine(
             $order->totalShippingCost,  // total amount for the line item
             1,                          // quantity
             "FR",                       // Item Code
-            "FR"                        // Tax code for freight - Shipping only, common carrier - FOB destination
+            $shippingTaxCode            // Tax code for freight (Shipping)
         );
 
         if($this->debug)
