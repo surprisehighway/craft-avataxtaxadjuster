@@ -57,6 +57,17 @@ Calculate and add sales tax to an order's base tax using Avalara's AvaTax servic
 
 After completing the installation and configuration, AvaTax will calculate and apply sales tax to all orders with a valid shipping address.
 
+## Tax Codes
+
+The default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) is set to P0000000 - Tangible person property (TPP). You can set a specific Tax Code for each product by adding a custom field to your Products.
+
+1. Add a new field with a handle of `avataxTaxCode`.
+2. Visit `Commerce > Settings > Product Types` and click the name of your Product Type.
+2. Click the *Product Fields* tab.
+3. Add the new `avataxTaxCode` field and save.
+
+In your product entries you can now enter any text to send along as the Avatax Tax Code. Hint: You can set up this field to be plain text, a dropdown with pre-configured values for your use case.
+
 ## Refunds
 
 Craft Commerce only supports refunds for completed transactions if the [payment gateway](https://craftcommerce.com/support/which-payment-gateways-do-you-support) supports refunds. If refunds are supported for an order Craft displays a "Refund" button in the order’s Transaction history. Triggering a refund in this way will void the corresponding AvaTax transaction.
