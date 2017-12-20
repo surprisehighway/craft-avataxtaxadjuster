@@ -78,7 +78,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
 
         if($transaction->status == 'success')
         {
-            craft()->avataxTaxAdjuster_salesTax->voidTransaction($transaction->order);
+            craft()->avataxTaxAdjuster_salesTax->refundTransaction($transaction->order);
         }
     }
 

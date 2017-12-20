@@ -163,44 +163,44 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      * @param object Commerce_OrderModel $order
      * @return object
      *
-     * Voids a sales invoice
-     * See "Voiding Documents" https://developer.avalara.com/avatax/voiding-documents/
+     * Refund a committed sales invoice
+     * See "Refund Transaction" https://developer.avalara.com/api-reference/avatax/rest/v2/methods/Transactions/RefundTransaction
      *
      */
-    public function voidTransaction($order)
+    public function refundTransaction($order)
     {
         $client = $this->createClient();
 
-        $companyCode = $this->getCompanyCode();
-        $transactionCode = $this->getTransactionCode($order);
-
-        $model = array(
-            'code' => \Avalara\VoidReasonCode::C_DOCVOIDED,
-            'commit' => true
+        $request = array(
+            'companyCode' => $this->getCompanyCode(),
+            'transactionCode' => $this->getTransactionCode($order)
         );
 
-        $response = $client->voidTransaction($companyCode, $transactionCode, $model);
+        $model = array(
+            'refundTransactionCode' => $request['transactionCode'].'.1',
+            'refundType' => \Avalara\RefundType::C_FULL,
+            'refundDate' => date('Y-m-d')
+        );
+
+        extract($request);
+
+        $response = $client->refundTransaction($companyCode, $transactionCode, null, $model);
 
         if($this->debug)
         {
-            $request = array(
-                'companyCode' => $companyCode,
-                'transactionCode' => $transactionCode
-            );
-
             $request = array_merge($request, $model);
 
-            AvataxTaxAdjusterPlugin::log('\Avalara\Client->voidTransaction(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+            AvataxTaxAdjusterPlugin::log('\Avalara\Client->refundTransaction(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
         }
 
-        if(is_array($response) && isset($response->status) && $response->status == 'Cancelled')
+        if(is_array($response) && isset($response->status) && $response->status == 'Committed')
         {
-            AvataxTaxAdjusterPlugin::log('Document Code '.$transactionCode.' was successfully cancelled.', LogLevel::Info, true);
+            AvataxTaxAdjusterPlugin::log('Transaction Code '.$transactionCode.' was successfully refunded.', LogLevel::Info, true);
 
             return true;
         }
 
-        AvataxTaxAdjusterPlugin::log('Document Code '.$transactionCode.' could not be cancelled.', LogLevel::Error, true);
+        AvataxTaxAdjusterPlugin::log('Transaction Code '.$transactionCode.' could not be refunded.', LogLevel::Error, true);
 
         return false;
     }
