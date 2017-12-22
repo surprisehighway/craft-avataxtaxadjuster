@@ -62,19 +62,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     private function getCustomerCode($order)
     {
-        $customerCode = 'GUEST';
-
-        if(!empty($order->email))
-        {
-            $customerCode = $order->email;
-
-            if(empty($order->customer->userId))
-            {
-                $customerCode .= ' (GUEST)';
-            }
-        }
-
-        return $customerCode;
+        return (!empty($order->email)) ? $order->email : 'GUEST';
     }
 
     /**
