@@ -279,14 +279,16 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     {
         $settings = ($settings) ? $settings : $this->settings;
 
-        $siteName = trim( craft()->getSiteName(), ';' );
+        $pluginName = 'Craft Commerce '.AvataxTaxAdjusterPlugin::getName();
+        $pluginVersion = AvataxTaxAdjusterPlugin::getVersion();
+        $machineName = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : 'localhost';
 
         if($settings['environment'] == 'production')
         {
             if($settings['accountId'] && $settings['licenseKey'])
             {
                 // Create a new client
-                $client = new AvaTaxClient($siteName, '1.0', 'localhost', 'production');
+                $client = new AvaTaxClient($pluginName, $pluginVersion, $machineName, 'production');
 
                 $client->withLicenseKey( $settings['accountId'], $settings['licenseKey'] );
 
@@ -299,7 +301,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             if($settings['sandboxAccountId'] && $settings['sandboxLicenseKey'])
             {
                 // Create a new client
-                $client = new AvaTaxClient($siteName, '1.0', 'localhost', 'sandbox');
+                $client = new AvaTaxClient($pluginName, $pluginVersion, $machineName, 'sandbox');
 
                 $client->withLicenseKey( $settings['sandboxAccountId'], $settings['sandboxLicenseKey'] );
 
