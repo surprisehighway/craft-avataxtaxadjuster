@@ -19,6 +19,8 @@ use Avalara\AvaTaxClient as AvaTaxClient;
 
 class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 {
+    private $debug = false;
+
     public $settings = array();
 
     public function __construct()
@@ -30,17 +32,9 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     {
         $plugin = craft()->plugins->getPlugin('AvataxTaxAdjuster');
 
-        $settings = array();
+        $settings = $plugin->getSettings();
 
-        $settings['accountId'] = $plugin->getSettings()->getAttribute('accountId');
-        $settings['licenseKey'] = $plugin->getSettings()->getAttribute('licenseKey');
-        $settings['companyCode'] = $plugin->getSettings()->getAttribute('companyCode');
-
-        $settings['sandboxAccountId'] = $plugin->getSettings()->getAttribute('sandboxAccountId');
-        $settings['sandboxLicenseKey'] = $plugin->getSettings()->getAttribute('sandboxLicenseKey');
-        $settings['sandboxCompanyCode'] = $plugin->getSettings()->getAttribute('sandboxCompanyCode');
-
-        $settings['environment'] = $plugin->getSettings()->getAttribute('environment');
+        $this->debug = $settings->debug;
 
         return $settings;
     }
@@ -64,6 +58,27 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
     }
 
     /**
+     * @return string $customerCode
+     */
+    private function getCustomerCode($order)
+    {
+        return (!empty($order->email)) ? $order->email : 'GUEST';
+    }
+
+    /**
+     * @return string $transactionCode
+     *
+     * Use the prefixed order number as the document code so that
+     * we can reference it again for subsequent calls if needed.
+     */
+    private function getTransactionCode($order)
+    {
+        $prefix = 'cr_';
+
+        return $prefix.$order->number;
+    }
+
+    /**
      * @param object Commerce_OrderModel $order
      * @return object
      *
@@ -77,9 +92,19 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     public function createSalesOrder($order)
     {
+        if(!$this->settings->getAttribute('enableTaxCalculation'))
+        {
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log(__FUNCTION__.'(): Tax Calculation is disabled.', LogLevel::Info, true);
+            }
+
+            return false;
+        }
+
         $client = $this->createClient();
 
-        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESORDER, "DEFAULT");
+        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESORDER, $this->getCustomerCode($order));
 
         $totalTax = $this->getTotalTax($order, $tb);
 
@@ -101,9 +126,19 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     public function createSalesInvoice($order)
     {
+        if(!$this->settings['enableCommitting'])
+        {
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log(__FUNCTION__.'(): Document Committing is disabled.', LogLevel::Info, true);
+            }
+
+            return false;
+        }
+
         $client = $this->createClient();
 
-        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESINVOICE, "DEFAULT");
+        $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESINVOICE, $this->getCustomerCode($order));
 
         $tb->withCommit();
 
@@ -112,42 +147,170 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         return $totalTax;
     }
 
+    /**
+     * @param object Commerce_OrderModel $order
+     * @return object
+     *
+     * Refund a committed sales invoice
+     * See "Refund Transaction" https://developer.avalara.com/api-reference/avatax/rest/v2/methods/Transactions/RefundTransaction
+     *
+     */
+    public function refundTransaction($order)
+    {
+        $client = $this->createClient();
+
+        $request = array(
+            'companyCode' => $this->getCompanyCode(),
+            'transactionCode' => $this->getTransactionCode($order)
+        );
+
+        $model = array(
+            'refundTransactionCode' => $request['transactionCode'].'.1',
+            'refundType' => \Avalara\RefundType::C_FULL,
+            'refundDate' => date('Y-m-d')
+        );
+
+        extract($request);
+
+        $response = $client->refundTransaction($companyCode, $transactionCode, null, $model);
+
+        if($this->debug)
+        {
+            $request = array_merge($request, $model);
+
+            AvataxTaxAdjusterPlugin::log('\Avalara\Client->refundTransaction(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+        }
+
+        if(is_array($response) && isset($response->status) && $response->status == 'Committed')
+        {
+            AvataxTaxAdjusterPlugin::log('Transaction Code '.$transactionCode.' was successfully refunded.', LogLevel::Info, true);
+
+            return true;
+        }
+
+        AvataxTaxAdjusterPlugin::log('Transaction Code '.$transactionCode.' could not be refunded.', LogLevel::Error, true);
+
+        return false;
+    }
+
+    /**
+     * @param object Commerce_AddressModel $address
+     * @return object
+     *
+     *  From any other plugin file, call it like this:
+     *  craft()->avataxTaxAdjuster_salesTax->validateAddress()
+     *
+     * Validates and address
+     * See: https://developer.avalara.com/api-reference/avatax/rest/v2/methods/Addresses/ResolveAddressPost/
+     *
+     */
+    public function validateAddress($address)
+    {
+        if(!$this->settings['enableAddressValidation'])
+        {
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log(__FUNCTION__.'(): Address validation is disabled.', LogLevel::Info, true);
+            }
+
+            return false;
+        }
+
+        $request = array(
+            'line1' => $address->address1,
+            'line2' => $address->address2,
+            'line3' => '', 
+            'city' => $address->city,
+            'region' => $address->getState() ? $address->getState() ? $address->getState()->abbreviation : $address->getStateText() : '', 
+            'postalCode' => $address->zipCode,
+            'country' => $address->country->iso, 
+            'textCase' => 'Mixed',
+            'latitude' => '',
+            'longitude' => ''
+        );
+
+        extract($request);
+
+        $client = $this->createClient();
+
+        $response = $client->resolveAddress($line1, $line2, $line3, $city, $region, $postalCode, $country, $textCase, $latitude, $longitude);
+
+        if($this->debug)
+        {
+            AvataxTaxAdjusterPlugin::log('\Avalara\AvaTaxClient->resolveAddress(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+        }
+
+        if(isset($response->validatedAddresses) || isset($response->coordinates))
+        {
+            return true;
+        }
+
+        AvataxTaxAdjusterPlugin::log('Address validation failed.', LogLevel::Error, true);
+
+        // Request failed
+        throw new HttpException(400, 'Invalid address.');
+
+        return false;
+    }
+
+
+    /**
+     * @param array $settings
+     * @return object or boolean
+     *
+     *  From any other plugin file, call it like this:
+     *  craft()->avataxTaxAdjuster_salesTax->connectionTest()
+     *
+     * Creates a new client with the given settings and tests the connection.
+     * See https://developer.avalara.com/api-reference/avatax/rest/v2/methods/Utilities/Ping/
+     *
+     */
+    public function connectionTest($settings)
+    {
+        $client = $this->createClient($settings);
+
+        return $client->ping();
+    }
 
     /**
      * @return object $client
      */
-    private function createClient()
+    private function createClient($settings = null)
     {
-        $siteName = trim( craft()->getSiteName(), ';' );
+        $settings = ($settings) ? $settings : $this->settings;
 
-        if($this->settings['environment'] == 'production')
+        $pluginName = 'Craft Commerce '.AvataxTaxAdjusterPlugin::getName();
+        $pluginVersion = AvataxTaxAdjusterPlugin::getVersion();
+        $machineName = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : 'localhost';
+
+        if($settings['environment'] == 'production')
         {
-            if($this->settings['accountId'] && $this->settings['licenseKey'])
+            if($settings['accountId'] && $settings['licenseKey'])
             {
                 // Create a new client
-                $client = new AvaTaxClient($siteName, '1.0', 'localhost', 'production');
+                $client = new AvaTaxClient($pluginName, $pluginVersion, $machineName, 'production');
 
-                $client->withLicenseKey( $this->settings['accountId'], $this->settings['licenseKey'] );
+                $client->withLicenseKey( $settings['accountId'], $settings['licenseKey'] );
 
                 return $client;
             }
         }
 
-        if($this->settings['environment'] == 'sandbox')
+        if($settings['environment'] == 'sandbox')
         {
-            if($this->settings['sandboxAccountId'] && $this->settings['sandboxLicenseKey'])
+            if($settings['sandboxAccountId'] && $settings['sandboxLicenseKey'])
             {
                 // Create a new client
-                $client = new AvaTaxClient($siteName, '1.0', 'localhost', 'sandbox');
+                $client = new AvaTaxClient($pluginName, $pluginVersion, $machineName, 'sandbox');
 
-                $client->withLicenseKey( $this->settings['sandboxAccountId'], $this->settings['sandboxLicenseKey'] );
+                $client->withLicenseKey( $settings['sandboxAccountId'], $settings['sandboxLicenseKey'] );
 
                 return $client;
             }
         }
 
         // Don't have credentials
-        Craft::log('Avatax Account Credentials not found', LogLevel::Error, false, 'AvataxTaxAdjuster');
+        AvataxTaxAdjusterPlugin::log('Avatax Account Credentials not found', LogLevel::Error, true);
 
         // throw a craft exception which displays the error cleanly
         throw new HttpException(500, 'Avatax Account Credentials not found');
@@ -164,11 +327,20 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
      */
     private function getTotalTax($order, $transaction)
     {
+        if($this->settings['enableAddressValidation'])
+        {
+            // Make sure we have a valid address before continuing.
+            $this->validateAddress($order->shippingAddress);
+        }
 
         $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
+        $defaultTaxCode = craft()->config->get('defaultTaxCode', 'avataxtaxadjuster');
+        $defaultShippingCode = craft()->config->get('defaultShippingCode', 'avataxtaxadjuster');
 
-
-        $t = $transaction->withAddress(
+        $t = $transaction->withTransactionCode(
+                $this->getTransactionCode($order)
+            )
+            ->withAddress(
                 'shipFrom',
                 $shipFrom['street1'],
                 $shipFrom['street2'],
@@ -194,41 +366,71 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             // Our product has the avatax tax category specified
             if($lineItem->taxCategory == 'Avatax'){
 
-                $taxCode = 'P0000000';
+                $taxCode = $defaultTaxCode ? $defaultTaxCode : 'P0000000';
 
                 if(isset($lineItem->purchasable->product->avataxTaxCode)) {
-                    $taxCode = $lineItem->purchasable->product->avataxTaxCode ? $lineItem->purchasable->product->avataxTaxCode : 'P0000000';
+                    $taxCode = $lineItem->purchasable->product->avataxTaxCode ? $lineItem->purchasable->product->avataxTaxCode : $defaultTaxCode;
+                }
+
+                $itemCode = $lineItem->id;
+
+                if(!empty($lineItem->sku)) {
+                    $itemCode = $lineItem->sku;
                 }
 
                // amount, $quantity, $itemCode, $taxCode)
                $t = $t->withLine(
                     $lineItem->subtotal,    // Total amount for the line item
                     $lineItem->qty,         // Quantity
-                    $lineItem->id,          // Item Code
-                    $taxCode                // Tax Code - System or Custom Tax Code. Default (P0000000) is assumed.
+                    $itemCode,              // Item Code
+                    $taxCode                // Tax Code - Default or Custom Tax Code.
                 );
            }
         }
 
+        // Add each discount line item
+        foreach ($order->adjustments as $adjustment) {
+            if($adjustment->type == 'Discount') {
+                $t = $t->withLine(
+                    $adjustment->amount, // Total amount for the line item
+                    1,                   // quantity
+                    $adjustment->name,   // Item Code
+                    "OD010000"           // Tax Code - default to OD010000 - Discounts/retailer coupons associated w/taxable items only
+                );
+            }
+        }
+
         // Add shipping cost as line-item
+        $shippingTaxCode = $defaultShippingCode ? $defaultShippingCode : 'FR';
+
         $t = $t->withLine(
             $order->totalShippingCost,  // total amount for the line item
             1,                          // quantity
             "FR",                       // Item Code
-            "FR"                        // Tax code for freight - Shipping only, common carrier - FOB destination
+            $shippingTaxCode            // Tax code for freight (Shipping)
         );
 
+        if($this->debug)
+        {
+            $model = $t; // save the model for debug logging
+        }
+
         $t = $t->create();
+
+        if($this->debug)
+        {
+            AvataxTaxAdjusterPlugin::log('\Avalara\TransactionBuilder->create(): [request] '.json_encode((array)$model).' [response] '.json_encode($t), LogLevel::Trace, true);
+        }
 
         if(isset($t->totalTax))
         {
             return $t->totalTax;
         }
 
+        AvataxTaxAdjusterPlugin::log('Request to avatax.com failed', LogLevel::Error, true);
+
         // Request failed
         throw new HttpException(400, 'Request could not be completed');
-
-        Craft::log('Request to avatax.com failed', LogLevel::Error, false, 'AvataxTaxAdjuster');
 
         return false;
     }

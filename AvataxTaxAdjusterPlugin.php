@@ -38,6 +38,9 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         require __DIR__.'/vendor/autoload.php';
 
         craft()->on('commerce_orders.onBeforeOrderComplete', [$this, 'onBeforeOrderComplete']);
+        craft()->on('commerce_addresses.onBeforeSaveAddress', [$this, 'onBeforeSaveAddress']);
+        craft()->on('commerce_payments.onRefundTransaction', [$this, 'onRefundTransaction']);
+
     }
 
     /**
@@ -50,6 +53,33 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         $order = $event->params['order'];
 
         craft()->avataxTaxAdjuster_salesTax->createSalesInvoice($order);
+    }
+
+    /**
+     * Raised before address has been saved.
+     * Validate an address in avatax.
+     */
+    public function onBeforeSaveAddress(Event $event)
+    {
+        /** @var Commerce_AddressModel $address */
+        $address = $event->params['address'];
+
+        craft()->avataxTaxAdjuster_salesTax->validateAddress($address);
+    }
+
+    /**
+     * Raised after a transaction was attempted to be refunded.
+     * Void a transaction in.
+     */
+    public function onRefundTransaction(Event $event)
+    {
+        /** @var Commerce_TransactionModel $transaction */
+        $transaction = $event->params['transaction'];
+
+        if($transaction->status == 'success')
+        {
+            craft()->avataxTaxAdjuster_salesTax->refundTransaction($transaction->order);
+        }
     }
 
     /**
@@ -103,7 +133,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
      */
     public function getVersion()
     {
-        return '1.0.3';
+        return '1.0.5';
     }
 
     /**
@@ -238,30 +268,21 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
             'sandboxAccountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
             'sandboxLicenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
             'sandboxCompanyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
-
+            'enableTaxCalculation' => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
+            'enableCommitting' => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
+            'enableAddressValidation' => array( AttributeType::Bool, 'label' => 'Enable Address Validation', 'default' => true, 'required' => false),
+            'debug' => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
         );
     }
 
     /**
-     * Returns the HTML that displays your plugin’s settings.
-     *
-     * @return mixed
-     */
-    public function getSettingsHtml()
-    {
-       return craft()->templates->render('avataxtaxadjuster/AvataxTaxAdjuster_Settings', array(
-           'settings' => $this->getSettings()
-       ));
-    }
-
-
-    /**
-     * Returns the HTML that displays your plugin’s settings.
+     * Returns a URL to your plugin’s settings.
      *
      * @return string
      */
     public function getSettingsUrl()
     {
+        return 'avataxtaxadjuster/settings';
     }
 
     /**
@@ -277,6 +298,19 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         // Modify $settings here...
 
         return $settings;
+    }
+
+    /**
+     * Define custom CP routes.
+     *
+     * @return array
+     */
+    public function registerCpRoutes()
+    {
+        return array(
+            'avataxtaxadjuster/settings' => array('action' => 'avataxTaxAdjuster/settings'),
+            'avataxtaxadjuster/logs' => array('action' => 'avataxTaxAdjuster_Utilities/logs')
+        );
     }
 
     public function commerce_registerOrderAdjusters(){

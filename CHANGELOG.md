@@ -1,5 +1,29 @@
 # Avatax Tax Adjuster Changelog
 
+## 1.0.5 -- 2017.12.22
+
+### Added
+
+* Connection Test in settings page.
+* Full transaction logging (when enabled).
+* Setting to enable/disable tax calculation.
+* Setting to enable/disable document committing.
+* AvaTax Address validation (when enabled).
+* Refunds (AvaTax ReturnInvoice) for payment gateways that support refunds.
+
+### Fixed
+
+* Do not require a Shipping Method for initial tax calculation. (Shipping Address must still be set before initial calculation).
+
+### Improved
+
+* Default Tax Code now configurable.
+* Default Shipping Tax Code now configurable.
+* Customer code now uses email address to match Craft Commerce.
+* Document code now uses the full Craft Commerce order number (prefixed).
+* Updated documentation including product-level tax code field setup.
+
+
 ## 1.0.3 -- 2017.08.17
 
 ### Fixed

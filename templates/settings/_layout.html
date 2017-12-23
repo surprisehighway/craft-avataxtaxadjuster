@@ -1,0 +1,10 @@
+{% extends "_layouts/cp" %}
+{% set title = "AvaTax Tax Adjuster"|t %}
+
+{% set tabs = {
+    settings:    { label: "Settings"|t, url: url('avataxtaxadjuster/settings') },
+    logs: { label: "Logs"|t, url: url('avataxtaxadjuster/logs') }
+} %}
+
+{% includeCssResource 'avataxtaxadjuster/css/settings.css' %}
+{% includejsresource 'avataxtaxadjuster/js/settings.js' %}
