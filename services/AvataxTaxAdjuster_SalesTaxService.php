@@ -388,6 +388,18 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
            }
         }
 
+        // Add each discount line item
+        foreach ($order->adjustments as $adjustment) {
+            if($adjustment->type == 'Discount') {
+                $t = $t->withLine(
+                    $adjustment->amount, // Total amount for the line item
+                    1,                   // quantity
+                    $adjustment->name,   // Item Code
+                    "OD010000"           // Tax Code - default to OD010000 - Discounts/retailer coupons associated w/taxable items only
+                );
+            }
+        }
+
         // Add shipping cost as line-item
         $shippingTaxCode = $defaultShippingCode ? $defaultShippingCode : 'FR';
 
