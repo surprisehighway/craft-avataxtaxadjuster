@@ -60,15 +60,15 @@ After completing the installation and configuration, AvaTax will calculate and a
 
 ## Tax Codes
 
-*E.g. 'P0000000' - Tangible person property (TPP)*.
+*E.g. 'P0000000' - Tangible personal property (TPP)*.
 
-You can set the default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) by setting the `defaultTaxCode` value in your config file at `craft/config/avataxtaxadjuster.php`.
+You can set the default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) by setting the `defaultTaxCode` value in your config file at `craft/config/avataxtaxadjuster.php`. This is the default tax code that will get sent to Avalara for all products.
 
 You can also set a specific Tax Code for each product by adding a custom field to your Products. 
 
 To set up the override field:
 
-1. Add a new field with a handle of `avataxTaxCode`.
+1. Add a new field with a handle of `avataxTaxCode`. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Tax Code" or "Product Tax Code", but the field "Handle" must match `avataxTaxCode` and is case sensitive.
 2. Visit `Commerce > Settings > Product Types` and click the name of your Product Type.
 2. Click the *Product Fields* tab.
 3. Add the new `avataxTaxCode` field and save.
