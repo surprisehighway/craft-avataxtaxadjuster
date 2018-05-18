@@ -167,12 +167,13 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         $model = array(
             'refundTransactionCode' => $request['transactionCode'].'.1',
             'refundType' => \Avalara\RefundType::C_FULL,
-            'refundDate' => date('Y-m-d')
+            'refundDate' => date('Y-m-d'),
+            'referenceCode' => 'Refund from Craft Commerce'
         );
 
         extract($request);
 
-        $response = $client->refundTransaction($companyCode, $transactionCode, null, $model);
+        $response = $client->refundTransaction($companyCode, $transactionCode, null, null, null, $model);
 
         if($this->debug)
         {
