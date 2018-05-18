@@ -1,7 +1,6 @@
 {
     "name": "avalara/avataxclient",
     "description": "Client library for Avalara's AvaTax suite of business tax calculation and processing services. Uses the REST v2 API.",
-    "version": "17.8.1.120",
     "keywords": [
         "tax",
         "AvaTax",
@@ -11,7 +10,7 @@
         "tax calculation",
         "ecommerce"
     ],
-    "homepage": "http://developer.avalara.com/",
+    "homepage": "https://developer.avalara.com/",
     "authors": [
         {
             "name": "Avalara Developer Relations",
@@ -34,7 +33,7 @@
     "type": "library",
     "require": {
         "php": ">=5.5.9",
-        "guzzlehttp/guzzle": "~6.0"
+        "guzzlehttp/guzzle": "~6"
     },
     "require-dev": {
         "phpunit/phpunit": "5.7"
