@@ -1,5 +1,14 @@
 [
 	{
+	    "version": "1.0.6",
+	    "downloadUrl": "https://github.com/surprisehighway/craft-avataxtaxadjuster/archive/master.zip",
+	    "date": "2018-05-18T05:31:39.458Z",
+	    "notes": [
+		    "[Added] Send descriptions for products, discounts, and shipping line items.",
+		    "[Improved] Updated Avatax PHP SDK to v18.4.4.191."
+		]
+	},
+	{
 	    "version": "1.0.5",
 	    "downloadUrl": "https://github.com/surprisehighway/craft-avataxtaxadjuster/archive/master.zip",
 	    "date": "2017-12-22T05:31:39.458Z",
