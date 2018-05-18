@@ -12,14 +12,8 @@
 			"homepage": "https://github.com/surprisehighway"
 		}
 	],
-	"repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/rmknecht/AvaTax-REST-V2-PHP-SDK"
-        }
-    ],
 	"require": {
 		"composer/installers": "~1.0",
-		"avalara/avataxclient": "17.8.1.120"
+		"avalara/avataxclient": "18.4.4.191"
 	}
 }

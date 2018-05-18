@@ -1,5 +1,15 @@
 # Avatax Tax Adjuster Changelog
 
+## 1.0.6 -- 2018.5.18
+
+### Added
+
+* Send descriptions for products, discounts, and shipping line items.
+
+### Improved
+
+* Updated Avatax PHP SDK to v18.4.4.191."
+
 ## 1.0.5 -- 2017.12.22
 
 ### Added

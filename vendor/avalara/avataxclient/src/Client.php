@@ -39,20 +39,37 @@ class AvaTaxClientBase
     private $environment;
 
     /**
-     * Construct a new AvaTaxClient 
+     * @var bool        The setting for whether the client should catch exceptions
+     */
+    private $catchExceptions;
+
+    /**
+     * Construct a new AvaTaxClient
      *
      * @param string $appName      Specify the name of your application here.  Should not contain any semicolons.
      * @param string $appVersion   Specify the version number of your application here.  Should not contain any semicolons.
      * @param string $machineName  Specify the machine name of the machine on which this code is executing here.  Should not contain any semicolons.
      * @param string $environment  Indicates which server to use; acceptable values are "sandbox" or "production", or the full URL of your AvaTax instance.
+     * @param array $guzzleParams  Extra parameters to pass to the guzzle HTTP client (http://docs.guzzlephp.org/en/latest/request-options.html)
      */
-    public function __construct($appName, $appVersion, $machineName, $environment)
+    public function __construct($appName, $appVersion, $machineName="", $environment, $guzzleParams = [])
     {
+        // app name and app version are mandatory fields.
+        if ($appName == "" || $appName == null || $appVersion == "" || $appVersion == null) {
+            throw new Exception('appName and appVersion are manadatory fields!');
+        }
 
-        $this->appName = $appName;
+        // machine name is nullable, but must be empty string to avoid error when concat in client string.
+        if ($machineName == null) {
+            $machineName = "";
+        }
+
+        // assign client header params to current client object
         $this->appVersion = $appVersion;
+        $this->appName = $appName;
         $this->machineName = $machineName;
         $this->environment = $environment;
+        $this->catchExceptions = true;
 
         // Determine startup environment
         $env = 'https://rest.avatax.com';
@@ -62,10 +79,11 @@ class AvaTaxClientBase
             $env = $environment;
         }
 
+        // Prevent overriding the base_uri 
+        $guzzleParams['base_uri'] = $env;
+      
         // Configure the HTTP client
-        $this->client = new Client([
-            'base_uri' => $env
-        ]);
+        $this->client = new Client($guzzleParams);
     }
 
     /**
@@ -95,6 +113,30 @@ class AvaTaxClientBase
     }
 
     /**
+     * Configure this client to use bearer token
+     *
+     * @param  string          $bearerToken     The private bearer token for your AvaTax account
+     * @return AvaTaxClient
+     */
+    public function withBearerToken($bearerToken)
+    {
+        $this->auth = [$bearerToken];
+        return $this;
+    }
+
+    /**
+     * Configure the client to either catch web request exceptions and return a message or throw the exception
+     *
+     * @param bool $catchExceptions
+     * @return AvaTaxClient
+     */
+    public function withCatchExceptions($catchExceptions = true)
+    {
+        $this->catchExceptions = $catchExceptions;
+        return $this;
+    }
+
+    /**
      * Make a single REST call to the AvaTax v2 API server
      *
      * @param string $apiUrl           The relative path of the API on the server
@@ -104,21 +146,31 @@ class AvaTaxClientBase
     protected function restCall($apiUrl, $verb, $guzzleParams)
     {
         // Set authentication on the parameters
-        if (!isset($guzzleParams['auth'])){
-            $guzzleParams['auth'] = $this->auth;
-        }
-        $guzzleParams['headers'] = [
-            'Accept' => 'application/json',
-            'X-Avalara-Client' => "{$this->appName}; {$this->appVersion}; PhpRestClient; 17.5.0-67; {$this->machineName}"
-        ];
+        if(count($this->auth) == 2){
+		if (!isset($guzzleParams['auth'])){
+			$guzzleParams['auth'] = $this->auth;
+		}
+		$guzzleParams['headers'] = [
+			'Accept' => 'application/json',
+			'X-Avalara-Client' => "{$this->appName}; {$this->appVersion}; PhpRestClient; 17.5.0-67; {$this->machineName}"
+		];
+	 } else {
+		$guzzleParams['headers'] = [
+			'Accept' => 'application/json',
+			'Authorization' => 'Bearer '.$this->auth[0],
+			'X-Avalara-Client' => "{$this->appName}; {$this->appVersion}; PhpRestClient; 17.5.0-67; {$this->machineName}"
+		];
+	 }
 
         // Contact the server
         try {
             $response = $this->client->request($verb, $apiUrl, $guzzleParams);
             $body = $response->getBody();
             return json_decode($body);
-
         } catch (\Exception $e) {
+            if (!$this->catchExceptions) {
+                throw $e;
+            }
             return $e->getMessage();
         }
     }

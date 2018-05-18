@@ -23,28 +23,29 @@ class TransactionBuilder
      * Keeps track of the line number when adding multiple lines
      */
     private $_line_number;
-    
+
     /**
      * The client that will be used to create the transaction
      */
     private $_client;
-        
+
     /**
      * TransactionBuilder helps you construct a new transaction using a literate interface
      *
      * @param AvaTaxClient  $client        The AvaTaxClient object to use to create this transaction
      * @param string        $companyCode   The code of the company for this transaction
-     * @param DocumentType  $type          The type of transaction to create (See DocumentType::* for a list of allowable values)
+     * @param string        $type          The type of transaction to create (See DocumentType::* for a list of allowable values)
      * @param string        $customerCode  The customer code for this transaction
+     * @param string|null   $dateTime      The datetime of the transaction, defaults to current time when null (Format: Y-m-d)
      */
-    public function __construct($client, $companyCode, $type, $customerCode)
+    public function __construct($client, $companyCode, $type, $customerCode, $dateTime = null)
     {
         $this->_client = $client;
         $this->_line_number = 1;
         $this->_model = [
             'companyCode' => $companyCode,
             'customerCode' => $customerCode,
-            'date' => date('Y-m-d H:i:s'),
+            'date' => $dateTime !== null ? $dateTime : date('Y-m-d'),
             'type' => $type,
             'lines' => [],
         ];
@@ -92,8 +93,8 @@ class TransactionBuilder
      */
     public function withItemDiscount($discounted)
     {
-        $l = GetMostRecentLine("WithItemDiscount");
-        $l['discounted'] = $discounted;
+        $li = $this->getMostRecentLineIndex();
+        $this->_model['lines'][$li]['discounted'] = $discounted;
         return $this;
     }
 
@@ -122,6 +123,93 @@ class TransactionBuilder
     }
 
     /**
+     * Set VAT business identification number for customer
+     *
+     * @param   string              no
+     * @return TransactionBuilder
+     */
+    public function withBusinessIdentificationNo($no)
+    {
+        $this->_model['businessIdentificationNo'] = $no;
+        return $this;
+    }
+
+    /**
+     * Set client application customer or usage type
+     *
+     * @param   string              code    (See API endpoint `/api/v2/definitions/entityusecodes` for a list of allowable values)
+     * @return TransactionBuilder
+     */
+    public function withEntityUseCode($code)
+    {
+        $this->_model['entityUseCode'] = $code;
+        return $this;
+    }
+
+    /**
+     * Set purchase order number
+     *
+     * @param   string              no
+     * @return TransactionBuilder
+     */
+    public function withPurchaseOrderNo($no)
+    {
+        $this->_model['purchaseOrderNo'] = $no;
+        return $this;
+    }
+
+    /**
+     * Set customer-provided reference code
+     *
+     * @param   string              code
+     * @return TransactionBuilder
+     */
+    public function withReferenceCode($code)
+    {
+        $this->_model['referenceCode'] = $code;
+        return $this;
+    }
+
+    /**
+     * Set the sale location code for reporting this document to the tax authority
+     *
+     * @param   string              code
+     * @return TransactionBuilder
+     */
+    public function withReportingLocationCode($code)
+    {
+        $this->_model['reportingLocationCode'] = $code;
+        return $this;
+    }
+
+    /**
+     * Set flag for seller as importer of record
+     *
+     * @return TransactionBuilder
+     */
+    public function withSellerIsImporterOfRecord()
+    {
+        $this->_model['isSellerImporterOfRecord'] = true;
+        return $this;
+    }
+
+    /**
+     * Set exchange rate information
+     *
+     * @param   float               rate
+     * @param   date                effectiveDate
+     * @return TransactionBuilder
+     */
+    public function withExchangeRate($rate, $effectiveDate = null)
+    {
+        $this->_model['exchangeRate'] = $rate;
+        if ($effectiveDate) {
+            $this->_model['exchangeRateEffectiveDate'] = $effectiveDate;
+        }
+        return $this;
+    }
+
+    /**
      * Add a parameter at the document level
      *
      * @param   string              name
@@ -144,9 +232,11 @@ class TransactionBuilder
      */
     public function withLineParameter($name, $value)
     {
-        $l = $this->getMostRecentLine("WithLineParameter");
-        if (empty($l['parameters'])) $l['parameters'] = [];
-        $l[$name] = $value;
+        $li = $this->getMostRecentLineIndex();
+        if (empty($this->_model['lines'][$li]['parameters'])) {
+            $this->_model['lines'][$li]['parameters'] = [];
+        }
+        $this->_model['lines'][$li]['parameters'][$name] = $value;
         return $this;
     }
 
@@ -187,7 +277,7 @@ class TransactionBuilder
      * @param   float               $longitude  The longitude of the geolocation for this transaction
      * @return  TransactionBuilder
      */
-     public function withLatLong($type, $latitude, $longitude)
+    public function withLatLong($type, $latitude, $longitude)
     {
         $this->_model['addresses'][$type] = [
             'latitude' => $latitude,
@@ -211,8 +301,8 @@ class TransactionBuilder
      */
     public function withLineAddress($type, $line1, $line2, $line3, $city, $region, $postalCode, $country)
     {
-        $line = $this->getMostRecentLine("WithLineAddress");
-        $line['addresses'][$type] = [
+        $li = $this->getMostRecentLineIndex();
+        $this->_model['lines'][$li]['addresses'][$type] = [
             'line1' => $line1,
             'line2' => $line2,
             'line3' => $line3,
@@ -266,8 +356,8 @@ class TransactionBuilder
             throw new Exception("A valid date is required for a Tax Date Tax Override.");
         }
 
-        $line = $this->getMostRecentLine("WithLineTaxOverride");
-        $line['taxOverride'] = [
+        $li = $this->getMostRecentLineIndex();
+        $this->_model['lines'][$li]['taxOverride'] = [
             'type' => $type,
             'reason' => $reason,
             'taxAmount' => $taxAmount,
@@ -279,17 +369,70 @@ class TransactionBuilder
     }
 
     /**
+     * Set description for current line
+     *
+     * @param   string              description
+     * @return TransactionBuilder
+     * @throws \Exception
+     */
+    public function withLineDescription($description)
+    {
+        $li = $this->getMostRecentLineIndex();
+        $this->_model['lines'][$li]['description'] = $description;
+
+        return $this;
+    }
+
+    /**
+     * Set flag on current line to indicate tax is included
+     *
+     * @return TransactionBuilder
+     * @throws \Exception
+     */
+    public function withLineTaxIncluded()
+    {
+        $li = $this->getMostRecentLineIndex();
+        $this->_model['lines'][$li]['taxIncluded'] = true;
+
+        return $this;
+    }
+
+    /**
+     * Set customer defined fields for current line
+     *
+     * @param   string              ref1
+     * @param   string              ref2
+     * @return TransactionBuilder
+     * @throws \Exception
+     */
+    public function withLineCustomFields($ref1, $ref2 = null)
+    {
+        $li = $this->getMostRecentLineIndex();
+        $this->_model['lines'][$li]['ref1'] = $ref1;
+        if ($ref2) {
+            $this->_model['lines'][$li]['ref2'] = $ref2;
+        }
+
+        return $this;
+    }
+
+    /**
      * Add a line to this transaction
      *
-     * @param   float               $amount      Value of the item.
-     * @param   float               $quantity    Quantity of the item.
-     * @param   string              $taxCode     Tax Code of the item. If left blank, the default item (P0000000) is assumed.
+     * @param   float  $amount      Value of the item.
+     * @param   float  $quantity    Quantity of the item.
+     * @param   string $itemCode
+     * @param   string $taxCode     Tax Code of the item. If left blank, the default item (P0000000) is assumed.
+     * @param   string $lineNumber  Custom Line number, defaults to auto-incremented number if null
      * @return  TransactionBuilder
      */
-    public function withLine($amount, $quantity, $itemCode, $taxCode)
+    public function withLine($amount, $quantity, $itemCode, $taxCode, $lineNumber = null)
     {
+        if($lineNumber === null) {
+            $lineNumber = $this->_line_number;
+        }
         $l = [
-            'number' => $this->_line_number,
+            'number' => $lineNumber,
             'quantity' => $quantity,
             'amount' => $amount,
             'taxCode' => $taxCode,
@@ -314,12 +457,17 @@ class TransactionBuilder
      * @param   string              $region      State or Region of the location.
      * @param   string              $postalCode  Postal/zip code of the location.
      * @param   string              $country     The two-letter country code of the location.
+     * @param   string              $lineNumber  Custom Line number, defaults to auto-incremented number if null
      * @return  TransactionBuilder
      */
-    public function withSeparateAddressLine($amount, $type, $line1, $line2, $line3, $city, $region, $postalCode, $country)
+    public function withSeparateAddressLine($amount, $type, $line1, $line2, $line3, $city, $region, $postalCode,
+        $country, $lineNumber = null)
     {
+        if($lineNumber === null) {
+            $lineNumber = $this->_line_number;
+        }
         $l = [
-            'number' => $this->_line_number,
+            'number' => $lineNumber,
             'quantity' => 1,
             'amount' => $amount,
             'addresses' => [
@@ -348,12 +496,16 @@ class TransactionBuilder
      *
      * @param   float               $amount         The amount of this line item
      * @param   string              $exemptionCode  The exemption code for this line item
+     * @param   string              $lineNumber     Custom Line number, defaults to auto-incremented number if null
      * @return  TransactionBuilder
      */
-    public function withExemptLine($amount, $itemCode, $exemptionCode)
+    public function withExemptLine($amount, $itemCode, $exemptionCode, $lineNumber = null)
     {
+        if($lineNumber === null) {
+            $lineNumber = $this->_line_number;
+        }
         $l = [
-            'number' => $this->_line_number,
+            'number' => $lineNumber,
             'quantity' => 1,
             'amount' => $amount,
             'exemptionCode' => $exemptionCode,
@@ -367,28 +519,70 @@ class TransactionBuilder
     }
 
     /**
-     * Checks to see if the current model has a line.
+     * Specific a currency code for this transaction
      *
+     * @param   string              $currencyCode Specific the three-character ISO 4217 code that is being used for this transaction (optional)
      * @return  TransactionBuilder
      */
-    private function getMostRecentLine($memberName)
+    public function withCurrencyCode($currencyCode)
+    {
+
+        $this->_model['currencyCode'] = $currencyCode;
+        return $this;
+    }
+
+    /**
+     * Checks to see if the current model has a line.
+     *
+     * @return  int
+     */
+    private function getMostRecentLineIndex()
     {
         $c = count($this->_model['lines']);
         if ($c <= 0) {
-            throw new Exception("No lines have been added. The $memberName method applies to the most recent line.  To use this function, first add a line.");
+            throw new \Exception("No lines have been added. The $memberName method applies to the most recent line.  To use this function, first add a line.");
         }
 
-        return $this->_model['lines'][$c-1];
+        return $c-1;
+    }
+
+    /**
+     * Get the line number of the most recently added line
+     *
+     * @return int|null
+     */
+    public function getCurrentLineNumber()
+    {
+        try {
+            $li = $this->getMostRecentLineIndex();
+            return $this->_model['lines'][$li]['number'];
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
      * Create this transaction
      *
+     * @param string $include Specifies objects to include in the response after transaction is created
      * @return  TransactionModel
      */
-    public function create()
+    public function create($include = null)
     {
-        return $this->_client->createTransaction(null, $this->_model);
+        return $this->_client->createTransaction($include, $this->_model);
+    }
+
+    /**
+     * Create this transaction, or adjust an existing transaction that has the same transaction code.
+     *
+     * @param string $include
+     * @return TransactionModel
+     */
+    public function createOrAdjust($include = null)
+    {
+        $createOrAdjustTransactionModel = new CreateOrAdjustTransactionModel();
+        $createOrAdjustTransactionModel->createTransactionModel = $this->_model;
+        return $this->_client->createOrAdjustTransaction($include, $createOrAdjustTransactionModel);
     }
 
     /**
@@ -404,5 +598,30 @@ class TransactionBuilder
             'adjustmentReason' => $reason
         ];
     }
+    
+    /**
+     * Add Avalara LineItemModel objects to the lines array
+     *
+     * @return  TransactionBuilder
+     */
+    public function withLineItem($thing)
+    {
+        $mode = is_array($thing) ? 'multi' : 'single';
+
+        if ($mode === 'single') {
+            $this->_model['lines'][] = (array)$thing;
+            $this->_line_number++;
+        }
+
+
+        if ($mode === 'multi') {
+            foreach($thing as $lineItem) {
+                $this->_model['lines'][] = (array)$lineItem;
+                $this->_line_number++;
+            }
+        }
+
+        return $this;
+    }    
 }
 ?>
