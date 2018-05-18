@@ -385,6 +385,9 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
                     $itemCode,              // Item Code
                     $taxCode                // Tax Code - Default or Custom Tax Code.
                 );
+
+               // add human-readable description to line item
+               $t = $t->withLineDescription($lineItem->purchasable->product->title);
            }
         }
 
@@ -397,6 +400,9 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
                     $adjustment->name,   // Item Code
                     "OD010000"           // Tax Code - default to OD010000 - Discounts/retailer coupons associated w/taxable items only
                 );
+
+                // add description to discount line item
+                $t = $t->withLineDescription($adjustment->description);
             }
         }
 
@@ -409,6 +415,9 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             "FR",                       // Item Code
             $shippingTaxCode            // Tax code for freight (Shipping)
         );
+
+        // add description to shipping line item
+        $t = $t->withLineDescription('Total Shipping Cost');
 
         if($this->debug)
         {
