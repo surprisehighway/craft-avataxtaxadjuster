@@ -432,11 +432,6 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         // add description to shipping line item
         $t = $t->withLineDescription('Total Shipping Cost');
 
-        if($this->debug)
-        {
-            $model = $t; // save the model for debug logging
-        }
-
         // add entity/use code if set for a logged-in User
         if(!is_null($order->customer->user))
         {
@@ -445,6 +440,12 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             {
                 $t = $t->withEntityUseCode($order->customer->user->avataxCustomerUsageType->value);
             }
+        }
+
+        if($this->debug)
+        {
+            // workaround to save the model for debug logging
+            $m = $t; $model = $m->createAdjustmentRequest(null, null)['newTransaction'];
         }
 
         $t = $t->create();
