@@ -425,6 +425,16 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             $model = $t; // save the model for debug logging
         }
 
+        // add entity/use code if set for a logged-in User
+        if(!is_null($order->customer->user))
+        {
+            if(isset($order->customer->user->avataxCustomerUsageType) 
+            && !empty($order->customer->user->avataxCustomerUsageType->value))
+            {
+                $t = $t->withEntityUseCode($order->customer->user->avataxCustomerUsageType->value);
+            }
+        }
+
         $t = $t->create();
 
         if($this->debug)
