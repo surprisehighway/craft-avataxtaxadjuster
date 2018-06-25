@@ -217,28 +217,40 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             return false;
         }
 
-        $request = array(
-            'line1' => $address->address1,
-            'line2' => $address->address2,
-            'line3' => '', 
-            'city' => $address->city,
-            'region' => $address->getState() ? $address->getState() ? $address->getState()->abbreviation : $address->getStateText() : '', 
-            'postalCode' => $address->zipCode,
-            'country' => $address->country->iso, 
-            'textCase' => 'Mixed',
-            'latitude' => '',
-            'longitude' => ''
-        );
+        $signature = $this->getAddressSignature($address);
+        $cacheKey = 'avatax-address-'.$signature;
 
-        extract($request);
+        // Check if validated address has been cached, if not make api call.
+        $response = craft()->cache->get($cacheKey);
+        //if($response) AvataxTaxAdjusterPlugin::log('Cached address found: '.$cacheKey, LogLevel::Trace, true);
 
-        $client = $this->createClient();
-
-        $response = $client->resolveAddress($line1, $line2, $line3, $city, $region, $postalCode, $country, $textCase, $latitude, $longitude);
-
-        if($this->debug)
+        if(!$response) 
         {
-            AvataxTaxAdjusterPlugin::log('\Avalara\AvaTaxClient->resolveAddress(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+            $request = array(
+                'line1' => $address->address1,
+                'line2' => $address->address2,
+                'line3' => '', 
+                'city' => $address->city,
+                'region' => $address->getState() ? $address->getState() ? $address->getState()->abbreviation : $address->getStateText() : '', 
+                'postalCode' => $address->zipCode,
+                'country' => $address->country->iso, 
+                'textCase' => 'Mixed',
+                'latitude' => '',
+                'longitude' => ''
+            );
+
+            extract($request);
+
+            $client = $this->createClient();
+
+            $response = $client->resolveAddress($line1, $line2, $line3, $city, $region, $postalCode, $country, $textCase, $latitude, $longitude);
+
+            craft()->cache->set($cacheKey, $response);
+
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log('\Avalara\AvaTaxClient->resolveAddress(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+            }
         }
 
         if(isset($response->validatedAddresses) || isset($response->coordinates))
@@ -420,9 +432,20 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         // add description to shipping line item
         $t = $t->withLineDescription('Total Shipping Cost');
 
+        // add entity/use code if set for a logged-in User
+        if(!is_null($order->customer->user))
+        {
+            if(isset($order->customer->user->avataxCustomerUsageType) 
+            && !empty($order->customer->user->avataxCustomerUsageType->value))
+            {
+                $t = $t->withEntityUseCode($order->customer->user->avataxCustomerUsageType->value);
+            }
+        }
+
         if($this->debug)
         {
-            $model = $t; // save the model for debug logging
+            // workaround to save the model for debug logging
+            $m = $t; $model = $m->createAdjustmentRequest(null, null)['newTransaction'];
         }
 
         $t = $t->create();
@@ -443,6 +466,18 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         throw new HttpException(400, 'Request could not be completed');
 
         return false;
+    }
+
+
+    private function getAddressSignature(Commerce_AddressModel $address)
+    {
+        $line1 = $address->address1;
+        $line2 = $address->address2;
+        $city = $address->city;
+        $postalCode = $address->zipCode;
+        $country = $address->country->iso;
+
+        return md5($line1.$line2.$city.$postalCode.$country); 
     }
 
 }
