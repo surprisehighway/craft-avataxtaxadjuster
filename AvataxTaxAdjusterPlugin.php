@@ -6,6 +6,7 @@
  *
  *
  * @author    Rob Knecht
+ * @author    Mike Kroll
  * @copyright Copyright (c) 2017 Surprise Highway
  * @link      https://github.com/surprisehighway
  * @package   AvataxTaxAdjuster
@@ -217,7 +218,85 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
 
         }
 
-        craft()->request->redirect('/admin/settings/plugins/avataxtaxadjuster');
+        // Create an "avatax field group"
+        $avataxFieldGroupModel = new FieldGroupModel();
+        $avataxFieldGroupModel->name = 'Avatax';
+
+        if( craft()->fields->saveGroup($avataxFieldGroupModel) )
+        {
+            Craft::log('Avatax field group created successfully.', LogLevel::Info);
+
+            // Create avataxTaxCode field
+            $avataxTaxCodeModel = new FieldModel();
+            $avataxTaxCodeModel->groupId      = $avataxFieldGroupModel->id;
+            $avataxTaxCodeModel->name         = 'AvaTax Tax Code';
+            $avataxTaxCodeModel->handle       = 'avataxTaxCode';
+            $avataxTaxCodeModel->translatable = true;
+            $avataxTaxCodeModel->type         = 'PlainText';
+            $avataxTaxCodeModel->instructions = 'Specify an [Avalara Tax Code](https://taxcode.avatax.avalara.com) to use for this product.';
+            $avataxTaxCodeModel->settings = array(
+                'placeholder' => '',
+                'multiline' => '',
+                'initialRows' => '4',
+                'maxLength' => ''
+            );
+
+            if (craft()->fields->saveField($avataxTaxCodeModel))
+            {
+                Craft::log('Avatax Tax Code field created successfully.');
+            }
+            else
+            {
+                Craft::log('Could not save the Avatax Tax Code field.', LogLevel::Warning);
+            }
+
+            // Create avataxCustomerUsageType field
+            $avataxCustomerUsageTypeModel = new FieldModel();
+            $avataxCustomerUsageTypeModel->groupId      = $avataxFieldGroupModel->id;
+            $avataxCustomerUsageTypeModel->name         = 'AvaTax Customer Usage Type';
+            $avataxCustomerUsageTypeModel->handle       = 'avataxCustomerUsageType';
+            $avataxCustomerUsageTypeModel->translatable = true;
+            $avataxCustomerUsageTypeModel->type         = 'Dropdown';
+            $avataxCustomerUsageTypeModel->instructions = 'Select an [Entity/Use Code](https://help.avalara.com/000_Avalara_AvaTax/Exemption_Reason_Matrices_for_US_and_Canada) to exempt this customer from tax.';
+            $avataxCustomerUsageTypeModel->settings = array(
+                'options' => array(
+                    array('label' => '', 'value' => '', 'default' => ''),
+                    array('label' => 'A', 'value' => 'A. Federal government (United States)', 'default' => ''),
+                    array('label' => 'B', 'value' => 'B. State government (United States)', 'default' => ''),
+                    array('label' => 'C', 'value' => 'C. Tribe / Status Indian / Indian Band (both)', 'default' => ''),
+                    array('label' => 'D', 'value' => 'D. Foreign diplomat (both)', 'default' => ''),
+                    array('label' => 'E', 'value' => 'E. Charitable or benevolent org (both)', 'default' => ''),
+                    array('label' => 'F', 'value' => 'F. Religious or educational org (both)', 'default' => ''),
+                    array('label' => 'G', 'value' => 'G. Resale (both)', 'default' => ''),
+                    array('label' => 'H', 'value' => 'H. Commercial agricultural production (both)', 'default' => ''),
+                    array('label' => 'I', 'value' => 'I. Industrial production / manufacturer (both)', 'default' => ''),
+                    array('label' => 'J', 'value' => 'J. Direct pay permit (United States)', 'default' => ''),
+                    array('label' => 'K', 'value' => 'K. Direct mail (United States)', 'default' => ''),
+                    array('label' => 'L', 'value' => 'L. Other (both)', 'default' => ''),
+                    array('label' => 'M', 'value' => 'M. Not Used', 'default' => ''),
+                    array('label' => 'N', 'value' => 'N. Local government (United States)', 'default' => ''),
+                    array('label' => 'O', 'value' => 'O. Not Used', 'default' => ''),
+                    array('label' => 'P', 'value' => 'P. Commercial aquaculture (Canada)', 'default' => ''),
+                    array('label' => 'Q', 'value' => 'Q. Commercial Fishery (Canada)', 'default' => ''),
+                    array('label' => 'R', 'value' => 'R. Non-resident (Canada)', 'default' => '')
+                )
+            );
+
+            if (craft()->fields->saveField($avataxCustomerUsageTypeModel))
+            {
+                Craft::log('Avatax Customer Usage Type field created successfully.');
+            }
+            else
+            {
+                Craft::log('Could not save the Avatax Customer Usage Type field.', LogLevel::Warning);
+            }
+        }
+        else
+        {
+            Craft::log('Could not save the Avatax field group. ', LogLevel::Warning);
+        }
+
+        craft()->request->redirect('/admin/avataxtaxadjuster/settings');
     }
 
     /**
