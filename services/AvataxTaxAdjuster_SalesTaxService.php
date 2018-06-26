@@ -346,9 +346,9 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             $this->validateAddress($order->shippingAddress);
         }
 
-        $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
-        $defaultTaxCode = craft()->config->get('defaultTaxCode', 'avataxtaxadjuster');
-        $defaultShippingCode = craft()->config->get('defaultShippingCode', 'avataxtaxadjuster');
+        $shipFrom = $this->settings['shipFrom'];
+        $defaultTaxCode = $this->settings['defaultTaxCode'];
+        $defaultShippingCode = $this->settings['defaultShippingCode'];
 
         $t = $transaction->withTransactionCode(
                 $this->getTransactionCode($order)

@@ -341,16 +341,26 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
     {
         return array(
             'environment' => array( AttributeType::String, 'label' => 'Environment', 'default' => 'sandbox', 'required' => true),
-            'accountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => true),
-            'licenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => true),
+            'accountId'   => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => true),
+            'licenseKey'  => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => true),
             'companyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
-            'sandboxAccountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
-            'sandboxLicenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
+            'sandboxAccountId'   => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
+            'sandboxLicenseKey'  => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
             'sandboxCompanyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
-            'enableTaxCalculation' => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
-            'enableCommitting' => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
+            'shipFromName'    => array( AttributeType::String, 'label' => 'Name', 'default' => '', 'required' => true),
+            'shipFromStreet1' => array( AttributeType::String, 'label' => 'Street 1', 'default' => '', 'required' => true),
+            'shipFromStreet2' => array( AttributeType::String, 'label' => 'Street 1', 'default' => '', 'required' => false),
+            'shipFromStreet3' => array( AttributeType::String, 'label' => 'Street 3', 'default' => '', 'required' => false),
+            'shipFromCity'    => array( AttributeType::String, 'label' => 'City', 'default' => '', 'required' => true),
+            'shipFromState'   => array( AttributeType::String, 'label' => 'State/Province', 'default' => '', 'required' => true),
+            'shipFromZipCode' => array( AttributeType::String, 'label' => 'Postal Code', 'default' => '', 'required' => true),
+            'shipFromCountry' => array( AttributeType::String, 'label' => 'Country', 'default' => '', 'required' => true),
+            'enableTaxCalculation'    => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
+            'enableCommitting'        => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
             'enableAddressValidation' => array( AttributeType::Bool, 'label' => 'Enable Address Validation', 'default' => true, 'required' => false),
-            'debug' => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
+            'defaultTaxCode'          => array( AttributeType::String, 'label' => 'Default Tax Code', 'default' => 'P0000000', 'required' => true),
+            'defaultShippingCode'     => array( AttributeType::String, 'label' => 'Default Shipping Code', 'default' => 'FR', 'required' => true),
+            'debug'                   => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
         );
     }
 
@@ -377,6 +387,44 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         // Modify $settings here...
 
         return $settings;
+    }
+
+    /**
+     * @param array|BaseModel $values
+     */
+    public function setSettings($values)
+    {
+        if (!$values)
+        {
+            $values = array();
+        }
+
+        if (is_array($values))
+        {
+            // Merge in any values that are stored in craft/config/avataxtaxadjuster.php
+            foreach ($this->getSettings() as $key => $value)
+            {
+                if(substr($key, 0, 8) === 'shipFrom')
+                {
+                    $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
+                    $shipFromKey = lcfirst(str_replace('shipFrom', '', $key));
+                    if(!empty($shipFrom[ $shipFromKey]))
+                    {
+                        $values[$key] = $shipFrom[$shipFromKey];
+                    }
+                }
+                else
+                {
+                    $configValue = craft()->config->get($key, 'avataxtaxadjuster');
+                    if ($configValue !== null)
+                    {
+                        $values[$key] = $configValue;
+                    }
+                }
+            }
+        }
+
+        parent::setSettings($values);
     }
 
     /**
