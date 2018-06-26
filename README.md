@@ -66,22 +66,38 @@ You can set the default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) 
 
 You can also set a specific Tax Code for each product by adding a custom field to your Products. 
 
-To set up the override field:
+#### To set up the product field:
 
-1. Add a new field with a handle of `avataxTaxCode`. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Tax Code" or "Product Tax Code", but the field "Handle" must match `avataxTaxCode` and is case sensitive.
+1. Visit `Settings > Fields`. You should see a field named "AvaTax Tax Code" that was created during plugin installation. If not create, one. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Tax Code" or "Product Tax Code", but the field "Handle" must match `avataxTaxCode` and is case sensitive.
 2. Visit `Commerce > Settings > Product Types` and click the name of your Product Type.
 2. Click the *Product Fields* tab.
-3. Add the new `avataxTaxCode` field and save.
+3. Add the AvaTax Tax Code field and save.
 
 In your product entries you can now enter any text to send along as the AvaTax Tax Code. If this field does not exist or is left empty the default tax code setting in your config file will be used. 
 
-Hint: You can set up this field to be plain text, or a dropdown with pre-configured values for your use case.
+> Hint: By default the field is plain text, but you could change it to a dropdown with pre-configured values for your use case as long as the handle stays the same.
 
 ## Shipping Codes
 
 *E.g. 'FR' - Shipping Only - common carrier - FOB destination.*
 
 Shipping charges are sent as a separate line item to AvaTax. You can set your default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) for shipping charges by setting the `defaultShippingCode` value in your config file at `craft/config/avataxtaxadjuster.php`.
+
+## Tax-Exempt Customers
+
+You can specify a customer to be exempt from tax by adding a custom field to your User settings which is used to specify an [Avalara Entity/Use Code](https://help.avalara.com/000_Avalara_AvaTax/Exemption_Reason_Matrices_for_US_and_Canada).
+
+#### To set up the User field:
+
+1. Visit `Settings > Fields`. You should see a field named "AvaTax Customer Usage Type" that was created during plugin installation. If not create, one. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Customer Usage Type" or "Entity/Use Code", but the field "Handle" must match `avataxCustomerUsageType` and is case sensitive.
+2. Visit `Settings > Users` and click the `Fields`.
+3. Add the AvaTax Customer Usage Type field and save.
+
+In your User accounts you can now set an Entity/Use Code to send to Avalara. It is up to you how you implement this for your users if you allow them to edit their own profiles on the front-end, but this will most likely remain an administrative task in most cases.
+
+This necessarily requires a registered User to be logged in during checkout, not guest checkouts.
+
+> Hint: By default this dropdown field contains all the default Avalara Entity/Use Codes but you can edit the options to customize for own use case or if you’ve set up custom codes via the AvaTax website.
 
 ## Refunds
 
@@ -98,4 +114,4 @@ Some things to do, and ideas for potential features:
 
 ---
 
-Brought to you by [Rob Knecht](https://github.com/rmknecht) and [Surprise Highway](https://github.com/surprisehighway)
+Brought to you by [Surprise Highway](https://github.com/surprisehighway)
