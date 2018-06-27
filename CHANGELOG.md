@@ -1,5 +1,19 @@
 # Avatax Tax Adjuster Changelog
 
+## 1.0.7 -- 2018.6.27
+
+### Added
+
+* Entity/Use Code for exempting customers from tax.
+* Automatically install fields when plugin is installed.
+
+### Improved
+
+* Move all options to plugin settings and allow config overrides.
+* Cache address validation requests to limit API calls during checkout.
+* Cache Sales Order tax requests to limit API calls during checkout.
+* Updated logging display."
+
 ## 1.0.6 -- 2018.5.18
 
 ### Added
