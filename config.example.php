@@ -31,8 +31,8 @@ return [
     'sandboxAccountId'   => '',
     'sandboxLicenseKey'  => '',
     'sandboxCompanyCode' => '',
-    // Environment - 'Production' or 'Sandbox'.
-    'environment' => 'Sandbox',
+    // Environment - 'production' or 'sandbox'.
+    'environment' => 'sandbox',
     // AvaTax options - true or false
     'enableTaxCalculation'    => true,
     'enableCommitting'        => true,
