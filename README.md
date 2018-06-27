@@ -105,6 +105,8 @@ In your User accounts you can now set an Entity/Use Code to send to Avalara. It 
 
 This necessarily requires a registered User to be logged in during checkout, not guest checkouts.
 
+![Dropdown](resources/field-usage-type.png)
+
 > Hint: By default this dropdown field contains all the default Avalara Entity/Use Codes but you can edit the options to customize for own use case or if you’ve set up custom codes via the AvaTax website.
 
 ## Refunds
