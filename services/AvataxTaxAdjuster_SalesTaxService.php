@@ -346,7 +346,6 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             $this->validateAddress($order->shippingAddress);
         }
 
-        $shipFrom = $this->settings['shipFrom'];
         $defaultTaxCode = $this->settings['defaultTaxCode'];
         $defaultShippingCode = $this->settings['defaultShippingCode'];
 
@@ -355,13 +354,13 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             )
             ->withAddress(
                 'shipFrom',
-                $shipFrom['street1'],
-                $shipFrom['street2'],
-                $shipFrom['street3'],
-                $shipFrom['city'],
-                $shipFrom['state'],
-                $shipFrom['zipCode'],
-                $shipFrom['country']
+                $this->settings['shipFromStreet1'],
+                $this->settings['shipFromStreet2'],
+                $this->settings['shipFromStreet3'],
+                $this->settings['shipFromCity'],
+                $this->settings['shipFromState'],
+                $this->settings['shipFromZipCode'],
+                $this->settings['shipFromCountry']
             )
             ->withAddress(
                 'shipTo',

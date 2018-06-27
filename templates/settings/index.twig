@@ -135,6 +135,12 @@
 
     <h2>Origin Ship From Address</h2>
 
+    {% if(craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)) %}
+        <div class="field">
+            <p class="warning">Origin Ship From Address is being overridden by the shipFrom config setting in your avataxtaxadjuster.php config file.</p>
+        </div>
+    {% endif %}
+
     {{ forms.textField({
         label:        'Name',
         instructions: '',
@@ -143,41 +149,41 @@
         value:        settings.shipFromName,
         required:     true,
         disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-        errors:       settings.getErrors('name')
+        errors:       settings.getErrors('shipFromName')
         })
     }}
 
     {{ forms.textField({
         label:        'Street 1',
         instructions: '',
-        id:           'street1',
-        name:         'street1',
+        id:           'shipFromStreet1',
+        name:         'shipFromStreet1',
         value:        settings.shipFromStreet1,
         required:     true,
         disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-        errors:       settings.getErrors('street1')
+        errors:       settings.getErrors('shipFromStreet1')
         })
     }}
 
     {{ forms.textField({
         label:        'Street 2',
         instructions: '',
-        id:           'street2',
-        name:         'street2',
+        id:           'shipFromStreet2',
+        name:         'shipFromStreet2',
         value:        settings.shipFromStreet2,
         disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-        errors:       settings.getErrors('street2')
+        errors:       settings.getErrors('shipFromStreet2')
         })
     }}
 
     {{ forms.textField({
         label:        'Street 3',
         instructions: '',
-        id:           'street3',
-        name:         'street3',
+        id:           'shipFromStreet3',
+        name:         'shipFromStreet3',
         value:        settings.shipFromStreet3,
         disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-        errors:       settings.getErrors('street3')
+        errors:       settings.getErrors('shipFromStreet3')
         })
     }}
 
@@ -186,12 +192,12 @@
             {{ forms.textField({
                 label: 'City',
                 instructions: '',
-                id:           'city',
-                name:         'city',
+                id:           'shipFromCity',
+                name:         'shipFromCity',
                 value:        settings.shipFromCity,
                 required:     true,
                 disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-                errors:       settings.getErrors('city')
+                errors:       settings.getErrors('shipFromCity')
                 })
             }}
         </div>
@@ -199,12 +205,12 @@
             {{ forms.textField({
                 label:        'State',
                 instructions: '',
-                id:           'state',
-                name:         'state',
+                id:           'shipFromState',
+                name:         'shipFromState',
                 value:        settings.shipFromState,
                 required:     true,
                 disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-                errors:       settings.getErrors('state')
+                errors:       settings.getErrors('shipFromState')
                 })
             }} 
         </div>
@@ -215,12 +221,12 @@
             {{ forms.textField({
                 label:        'Country',
                 instructions: '',
-                id:           'country',
-                name:         'country',
+                id:           'shipFromCountry',
+                name:         'shipFromCountry',
                 value:        settings.shipFromCountry,
                 required:     true,
                 disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-                errors:       settings.getErrors('country')
+                errors:       settings.getErrors('shipFromCountry')
                 })
             }}
         </div>
@@ -228,12 +234,12 @@
             {{ forms.textField({
                 label:        'Zip Code',
                 instructions: '',
-                id:           'zipCode',
-                name:         'zipCode',
+                id:           'shipFromZipCode',
+                name:         'shipFromZipCode',
                 value:        settings.shipFromZipCode,
                 required:     true,
                 disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
-                errors:       settings.getErrors('zipCode')
+                errors:       settings.getErrors('shipFromZipCode')
                 })
             }}          
         </div>
