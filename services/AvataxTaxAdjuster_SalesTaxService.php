@@ -21,6 +21,8 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 {
     private $debug = false;
 
+    private $type = null;
+
     public $settings = array();
 
     public function __construct()
@@ -102,6 +104,8 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             return false;
         }
 
+        $this->type = 'order';
+
         $client = $this->createClient();
 
         $tb = new \Avalara\TransactionBuilder($client, $this->getCompanyCode(), \Avalara\DocumentType::C_SALESORDER, $this->getCustomerCode($order));
@@ -135,6 +139,8 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 
             return false;
         }
+
+        $this->type = 'invoice';
 
         $client = $this->createClient();
 
@@ -217,28 +223,40 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             return false;
         }
 
-        $request = array(
-            'line1' => $address->address1,
-            'line2' => $address->address2,
-            'line3' => '', 
-            'city' => $address->city,
-            'region' => $address->getState() ? $address->getState() ? $address->getState()->abbreviation : $address->getStateText() : '', 
-            'postalCode' => $address->zipCode,
-            'country' => $address->country->iso, 
-            'textCase' => 'Mixed',
-            'latitude' => '',
-            'longitude' => ''
-        );
+        $signature = $this->getAddressSignature($address);
+        $cacheKey = 'avatax-address-'.$signature;
 
-        extract($request);
+        // Check if validated address has been cached, if not make api call.
+        $response = craft()->cache->get($cacheKey);
+        //if($response) AvataxTaxAdjusterPlugin::log('Cached address found: '.$cacheKey, LogLevel::Trace, true); 
 
-        $client = $this->createClient();
-
-        $response = $client->resolveAddress($line1, $line2, $line3, $city, $region, $postalCode, $country, $textCase, $latitude, $longitude);
-
-        if($this->debug)
+        if(!$response) 
         {
-            AvataxTaxAdjusterPlugin::log('\Avalara\AvaTaxClient->resolveAddress(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+            $request = array(
+                'line1' => $address->address1,
+                'line2' => $address->address2,
+                'line3' => '', 
+                'city' => $address->city,
+                'region' => $address->getState() ? $address->getState() ? $address->getState()->abbreviation : $address->getStateText() : '', 
+                'postalCode' => $address->zipCode,
+                'country' => $address->country->iso, 
+                'textCase' => 'Mixed',
+                'latitude' => '',
+                'longitude' => ''
+            );
+
+            extract($request);
+
+            $client = $this->createClient();
+
+            $response = $client->resolveAddress($line1, $line2, $line3, $city, $region, $postalCode, $country, $textCase, $latitude, $longitude);
+
+            craft()->cache->set($cacheKey, $response);
+
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log('\Avalara\AvaTaxClient->resolveAddress(): [request] '.json_encode($request).' [response] '.json_encode($response), LogLevel::Trace, true);
+            }
         }
 
         if(isset($response->validatedAddresses) || isset($response->coordinates))
@@ -334,22 +352,21 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
             $this->validateAddress($order->shippingAddress);
         }
 
-        $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
-        $defaultTaxCode = craft()->config->get('defaultTaxCode', 'avataxtaxadjuster');
-        $defaultShippingCode = craft()->config->get('defaultShippingCode', 'avataxtaxadjuster');
+        $defaultTaxCode = $this->settings['defaultTaxCode'];
+        $defaultShippingCode = $this->settings['defaultShippingCode'];
 
         $t = $transaction->withTransactionCode(
                 $this->getTransactionCode($order)
             )
             ->withAddress(
                 'shipFrom',
-                $shipFrom['street1'],
-                $shipFrom['street2'],
-                $shipFrom['street3'],
-                $shipFrom['city'],
-                $shipFrom['state'],
-                $shipFrom['zipCode'],
-                $shipFrom['country']
+                $this->settings['shipFromStreet1'],
+                $this->settings['shipFromStreet2'],
+                $this->settings['shipFromStreet3'],
+                $this->settings['shipFromCity'],
+                $this->settings['shipFromState'],
+                $this->settings['shipFromZipCode'],
+                $this->settings['shipFromCountry']
             )
             ->withAddress(
                 'shipTo',
@@ -420,21 +437,44 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         // add description to shipping line item
         $t = $t->withLineDescription('Total Shipping Cost');
 
-        if($this->debug)
+        // add entity/use code if set for a logged-in User
+        if(!is_null($order->customer->user))
         {
-            $model = $t; // save the model for debug logging
+            if(isset($order->customer->user->avataxCustomerUsageType) 
+            && !empty($order->customer->user->avataxCustomerUsageType->value))
+            {
+                $t = $t->withEntityUseCode($order->customer->user->avataxCustomerUsageType->value);
+            }
         }
 
-        $t = $t->create();
-
         if($this->debug)
         {
-            AvataxTaxAdjusterPlugin::log('\Avalara\TransactionBuilder->create(): [request] '.json_encode((array)$model).' [response] '.json_encode($t), LogLevel::Trace, true);
+            // workaround to save the model as array for debug logging
+            $m = $t; $model = $m->createAdjustmentRequest(null, null)['newTransaction'];
         }
 
-        if(isset($t->totalTax))
+        $signature = $this->getOrderSignature($order);
+        $cacheKey = 'avatax-'.$this->type.'-'.$signature;
+
+        // Check if tax request has been cached when not committing, if not make api call.
+        $response = craft()->cache->get($cacheKey);
+        //if($response) AvataxTaxAdjusterPlugin::log('Cached order found: '.$cacheKey, LogLevel::Trace, true); 
+
+        if(!$response || $this->type === 'invoice') 
         {
-            return $t->totalTax;
+            $response = $t->create();
+
+            craft()->cache->set($cacheKey, $response);
+
+            if($this->debug)
+            {
+                AvataxTaxAdjusterPlugin::log('\Avalara\TransactionBuilder->create() '.$this->type.': [request] '.json_encode($model).' [response] '.json_encode($response), LogLevel::Trace, true);
+            }
+        }
+
+        if(isset($response->totalTax))
+        {
+            return $response->totalTax;
         }
 
         AvataxTaxAdjusterPlugin::log('Request to avatax.com failed', LogLevel::Error, true);
@@ -443,6 +483,51 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         throw new HttpException(400, 'Request could not be completed');
 
         return false;
+    }
+
+
+    /**
+     * Returns a hash derived from the order's properties.
+     */
+    private function getOrderSignature(Commerce_OrderModel $order)
+    {
+        $orderNumber = $order->number;
+        $shipping = $order->totalShippingCost;
+        $discount = $order->totalDiscount;
+        $tax = $order->totalTax;
+        $total = $order->totalPrice;
+
+        $address1 = $order->shippingAddress->address1;
+        $address2 = $order->shippingAddress->address2;
+        $city = $order->shippingAddress->city;
+        $zipCode = $order->shippingAddress->zipCode;
+        $country = $order->shippingAddress->country->iso;
+        $address = $address1.$address2.$city.$zipCode.$country;
+
+        $lineItems = '';
+        foreach ($order->lineItems as $lineItem)
+        {
+            $itemCode = $lineItem->id;
+            $subtotal = $lineItem->subtotal;
+            $qty = $lineItem->qty;
+            $lineItems .= $itemCode.$subtotal.$qty;
+        }
+
+        return md5($orderNumber.$shipping.$discount.$tax.$total.$lineItems.$address); 
+    }
+
+    /**
+     * Returns a hash derived from the address.
+     */
+    private function getAddressSignature(Commerce_AddressModel $address)
+    {
+        $address1 = $address->address1;
+        $address2 = $address->address2;
+        $city = $address->city;
+        $zipCode = $address->zipCode;
+        $country = $address->country->iso;
+
+        return md5($address1.$address2.$city.$zipCode.$country); 
     }
 
 }

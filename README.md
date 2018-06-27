@@ -21,12 +21,12 @@ AvaTax Tax Adjuster works on Craft 2.6.x
 
 Calculate and add sales tax to an order's base tax using Avalara's AvaTax service.
 
-## Configuring AvaTax Tax Adjuster
+## Configuring AvaTax Ship From Origin
 
-1. Copy `config.php` from the `avataxtaxadjuster` directory to your craft/config folder and rename it to `avataxtaxadjuster.php`
-2. Specify a valid origin address within the `shipFrom` array.
-3. Specify a valid [Avalara Tax Code](https://taxcode.avatax.avalara.com/) for the `defaultTaxCode` value to use as the default tax code for your products.
-4. Specify a valid [Avalara Tax Code](https://taxcode.avatax.avalara.com/) for the `defaultShippingCode` value to use as the tax code for shipping charges.
+1. Specify a valid origin address to ship from.
+
+![Origin](resources/plugin-origin.png)
+
 
 ## Configuring AvaTax Account Connection
 
@@ -62,32 +62,63 @@ After completing the installation and configuration, AvaTax will calculate and a
 
 *E.g. 'P0000000' - Tangible personal property (TPP)*.
 
-You can set the default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) by setting the `defaultTaxCode` value in your config file at `craft/config/avataxtaxadjuster.php`. This is the default tax code that will get sent to Avalara for all products.
+You can set the default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) by setting the Default Tax Code value in the plugin settings. This is the default tax code that will get sent to Avalara for all products.
 
-You can also set a specific Tax Code for each product by adding a custom field to your Products. 
+![Defaults](resources/plugin-defaults.png)
 
-To set up the override field:
+You can also set a specific Tax Code for each product by adding a custom field to your Products.
 
-1. Add a new field with a handle of `avataxTaxCode`. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Tax Code" or "Product Tax Code", but the field "Handle" must match `avataxTaxCode` and is case sensitive.
+#### To set up the product field:
+
+1. Visit `Settings > Fields`. You should see a field named "AvaTax Tax Code" that was created during plugin installation. If not create, one. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Tax Code" or "Product Tax Code", but the field "Handle" must match `avataxTaxCode` and is case sensitive.
 2. Visit `Commerce > Settings > Product Types` and click the name of your Product Type.
 2. Click the *Product Fields* tab.
-3. Add the new `avataxTaxCode` field and save.
+3. Add the AvaTax Tax Code field and save.
+
+![Fields](resources/plugin-fields.png)
 
 In your product entries you can now enter any text to send along as the AvaTax Tax Code. If this field does not exist or is left empty the default tax code setting in your config file will be used. 
 
-Hint: You can set up this field to be plain text, or a dropdown with pre-configured values for your use case.
+> Hint: By default the field is plain text, but you could change it to a dropdown with pre-configured values for your use case as long as the handle stays the same.
 
 ## Shipping Codes
 
 *E.g. 'FR' - Shipping Only - common carrier - FOB destination.*
 
-Shipping charges are sent as a separate line item to AvaTax. You can set your default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) for shipping charges by setting the `defaultShippingCode` value in your config file at `craft/config/avataxtaxadjuster.php`.
+Shipping charges are sent as a separate line item to AvaTax. You can set your default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) for shipping charges by setting the Default Shipping Code in the plugin settings.
+
+![Defaults](resources/plugin-defaults.png)
+
+## Tax-Exempt Customers
+
+You can specify a customer to be exempt from tax by adding a custom field to your User settings which is used to specify an [Avalara Entity/Use Code](https://help.avalara.com/000_Avalara_AvaTax/Exemption_Reason_Matrices_for_US_and_Canada).
+
+#### To set up the User field:
+
+1. Visit `Settings > Fields`. You should see a field named "AvaTax Customer Usage Type" that was created during plugin installation. If not create, one. Note that the field "Name" can be anything you'd like, e.g. "AvaTax Customer Usage Type" or "Entity/Use Code", but the field "Handle" must match `avataxCustomerUsageType` and is case sensitive.
+2. Visit `Settings > Users` and click the `Fields`.
+3. Add the AvaTax Customer Usage Type field and save.
+
+![Fields](resources/plugin-fields.png)
+
+In your User accounts you can now set an Entity/Use Code to send to Avalara. It is up to you how you implement this for your users if you allow them to edit their own profiles on the front-end, but this will most likely remain an administrative task in most cases.
+
+This necessarily requires a registered User to be logged in during checkout, not guest checkouts.
+
+> Hint: By default this dropdown field contains all the default Avalara Entity/Use Codes but you can edit the options to customize for own use case or if you’ve set up custom codes via the AvaTax website.
 
 ## Refunds
 
 Craft Commerce only supports refunds for completed transactions if the [payment gateway](https://craftcommerce.com/support/which-payment-gateways-do-you-support) supports refunds. If refunds are supported for an order Craft displays a "Refund" button in the order’s Transaction history. Triggering a refund in this way will issue a new Return Invoice for full amount of the corresponding AvaTax transaction.
 
 Partial refunds, returns, or any other changes must be done manually via the AvaTax website.
+
+## Config Overrides
+
+You can use Craft's [plugin config file](https://docs.craftcms.com/v2/plugins/plugin-settings.html#config-file) support to override many of the plugin settings in the control panel. This is handy to "lock down" certain settings, and also to provide [per-environment settings](https://docs.craftcms.com/v2/multi-environment-configs.html).
+
+1. Copy `config.example.php` from the `avataxtaxadjuster` directory to your craft/config folder and rename it to `avataxtaxadjuster.php`
+2. Update values in `avataxtaxadjuster.php` and save.
 
 ## AvaTax Tax Adjuster Roadmap
 
@@ -98,4 +129,4 @@ Some things to do, and ideas for potential features:
 
 ---
 
-Brought to you by [Rob Knecht](https://github.com/rmknecht) and [Surprise Highway](https://github.com/surprisehighway)
+Brought to you by [Surprise Highway](https://github.com/surprisehighway)

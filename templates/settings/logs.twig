@@ -36,11 +36,11 @@
                     {% endif %}
                     {% if logEntry.request %}
                         <small class="light log-label">Request:</small>
-                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.request }}</textarea>
+                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.request|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}</textarea>
                     {% endif %}
                     {% if logEntry.response %}
                         <small class="light log-label">Response:</small>
-                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.response }}</textarea>
+                        <textarea class="text fullwidth log-response" readonly>{{ logEntry.response|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}</textarea>
                     {% endif %}
                 </td>
             </tr>

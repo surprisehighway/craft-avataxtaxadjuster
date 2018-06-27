@@ -6,6 +6,7 @@
  *
  *
  * @author    Rob Knecht
+ * @author    Mike Kroll
  * @copyright Copyright (c) 2017 Surprise Highway
  * @link      https://github.com/surprisehighway
  * @package   AvataxTaxAdjuster
@@ -133,7 +134,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
      */
     public function getVersion()
     {
-        return '1.0.6';
+        return '1.0.7';
     }
 
     /**
@@ -201,7 +202,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
             $newTaxCategoryModel = Commerce_TaxCategoryModel::populateModel( array(
                 'name' => 'Avatax',
                 'handle' => 'avatax',
-                'description' => 'Calculate tax rates using Avatax Avatax',
+                'description' => 'Calculate tax rates using Avalara AvaTax',
                 'default' => FALSE,
             ) );
 
@@ -217,7 +218,85 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
 
         }
 
-        craft()->request->redirect('/admin/settings/plugins/avataxtaxadjuster');
+        // Create an "avatax field group"
+        $avataxFieldGroupModel = new FieldGroupModel();
+        $avataxFieldGroupModel->name = 'Avatax';
+
+        if( craft()->fields->saveGroup($avataxFieldGroupModel) )
+        {
+            Craft::log('Avatax field group created successfully.', LogLevel::Info);
+
+            // Create avataxTaxCode field
+            $avataxTaxCodeModel = new FieldModel();
+            $avataxTaxCodeModel->groupId      = $avataxFieldGroupModel->id;
+            $avataxTaxCodeModel->name         = 'AvaTax Tax Code';
+            $avataxTaxCodeModel->handle       = 'avataxTaxCode';
+            $avataxTaxCodeModel->translatable = true;
+            $avataxTaxCodeModel->type         = 'PlainText';
+            $avataxTaxCodeModel->instructions = 'Specify an [Avalara Tax Code](https://taxcode.avatax.avalara.com) to use for this product.';
+            $avataxTaxCodeModel->settings = array(
+                'placeholder' => '',
+                'multiline' => '',
+                'initialRows' => '4',
+                'maxLength' => ''
+            );
+
+            if (craft()->fields->saveField($avataxTaxCodeModel))
+            {
+                Craft::log('Avatax Tax Code field created successfully.');
+            }
+            else
+            {
+                Craft::log('Could not save the Avatax Tax Code field.', LogLevel::Warning);
+            }
+
+            // Create avataxCustomerUsageType field
+            $avataxCustomerUsageTypeModel = new FieldModel();
+            $avataxCustomerUsageTypeModel->groupId      = $avataxFieldGroupModel->id;
+            $avataxCustomerUsageTypeModel->name         = 'AvaTax Customer Usage Type';
+            $avataxCustomerUsageTypeModel->handle       = 'avataxCustomerUsageType';
+            $avataxCustomerUsageTypeModel->translatable = true;
+            $avataxCustomerUsageTypeModel->type         = 'Dropdown';
+            $avataxCustomerUsageTypeModel->instructions = 'Select an [Entity/Use Code](https://help.avalara.com/000_Avalara_AvaTax/Exemption_Reason_Matrices_for_US_and_Canada) to exempt this customer from tax.';
+            $avataxCustomerUsageTypeModel->settings = array(
+                'options' => array(
+                    array('label' => '', 'value' => '', 'default' => ''),
+                    array('label' => 'A', 'value' => 'A. Federal government (United States)', 'default' => ''),
+                    array('label' => 'B', 'value' => 'B. State government (United States)', 'default' => ''),
+                    array('label' => 'C', 'value' => 'C. Tribe / Status Indian / Indian Band (both)', 'default' => ''),
+                    array('label' => 'D', 'value' => 'D. Foreign diplomat (both)', 'default' => ''),
+                    array('label' => 'E', 'value' => 'E. Charitable or benevolent org (both)', 'default' => ''),
+                    array('label' => 'F', 'value' => 'F. Religious or educational org (both)', 'default' => ''),
+                    array('label' => 'G', 'value' => 'G. Resale (both)', 'default' => ''),
+                    array('label' => 'H', 'value' => 'H. Commercial agricultural production (both)', 'default' => ''),
+                    array('label' => 'I', 'value' => 'I. Industrial production / manufacturer (both)', 'default' => ''),
+                    array('label' => 'J', 'value' => 'J. Direct pay permit (United States)', 'default' => ''),
+                    array('label' => 'K', 'value' => 'K. Direct mail (United States)', 'default' => ''),
+                    array('label' => 'L', 'value' => 'L. Other (both)', 'default' => ''),
+                    array('label' => 'M', 'value' => 'M. Not Used', 'default' => ''),
+                    array('label' => 'N', 'value' => 'N. Local government (United States)', 'default' => ''),
+                    array('label' => 'O', 'value' => 'O. Not Used', 'default' => ''),
+                    array('label' => 'P', 'value' => 'P. Commercial aquaculture (Canada)', 'default' => ''),
+                    array('label' => 'Q', 'value' => 'Q. Commercial Fishery (Canada)', 'default' => ''),
+                    array('label' => 'R', 'value' => 'R. Non-resident (Canada)', 'default' => '')
+                )
+            );
+
+            if (craft()->fields->saveField($avataxCustomerUsageTypeModel))
+            {
+                Craft::log('Avatax Customer Usage Type field created successfully.');
+            }
+            else
+            {
+                Craft::log('Could not save the Avatax Customer Usage Type field.', LogLevel::Warning);
+            }
+        }
+        else
+        {
+            Craft::log('Could not save the Avatax field group. ', LogLevel::Warning);
+        }
+
+        craft()->request->redirect('/admin/avataxtaxadjuster/settings');
     }
 
     /**
@@ -262,16 +341,26 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
     {
         return array(
             'environment' => array( AttributeType::String, 'label' => 'Environment', 'default' => 'sandbox', 'required' => true),
-            'accountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => true),
-            'licenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => true),
+            'accountId'   => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => true),
+            'licenseKey'  => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => true),
             'companyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
-            'sandboxAccountId' => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
-            'sandboxLicenseKey' => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
+            'sandboxAccountId'   => array( AttributeType::String, 'label' => 'Account ID', 'default' => '', 'required' => false),
+            'sandboxLicenseKey'  => array( AttributeType::String, 'label' => 'License Key', 'default' => '', 'required' => false),
             'sandboxCompanyCode' => array( AttributeType::String, 'label' => 'Company Code', 'default' => '', 'required' => false),
-            'enableTaxCalculation' => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
-            'enableCommitting' => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
+            'shipFromName'    => array( AttributeType::String, 'label' => 'Name', 'default' => '', 'required' => true),
+            'shipFromStreet1' => array( AttributeType::String, 'label' => 'Street 1', 'default' => '', 'required' => true),
+            'shipFromStreet2' => array( AttributeType::String, 'label' => 'Street 1', 'default' => '', 'required' => false),
+            'shipFromStreet3' => array( AttributeType::String, 'label' => 'Street 3', 'default' => '', 'required' => false),
+            'shipFromCity'    => array( AttributeType::String, 'label' => 'City', 'default' => '', 'required' => true),
+            'shipFromState'   => array( AttributeType::String, 'label' => 'State/Province', 'default' => '', 'required' => true),
+            'shipFromZipCode' => array( AttributeType::String, 'label' => 'Postal Code', 'default' => '', 'required' => true),
+            'shipFromCountry' => array( AttributeType::String, 'label' => 'Country', 'default' => '', 'required' => true),
+            'enableTaxCalculation'    => array( AttributeType::Bool, 'label' => 'Enable Tax Calculation', 'default' => true, 'required' => false),
+            'enableCommitting'        => array( AttributeType::Bool, 'label' => 'Enable Document Committing', 'default' => true, 'required' => false),
             'enableAddressValidation' => array( AttributeType::Bool, 'label' => 'Enable Address Validation', 'default' => true, 'required' => false),
-            'debug' => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
+            'defaultTaxCode'          => array( AttributeType::String, 'label' => 'Default Tax Code', 'default' => 'P0000000', 'required' => true),
+            'defaultShippingCode'     => array( AttributeType::String, 'label' => 'Default Shipping Code', 'default' => 'FR', 'required' => true),
+            'debug'                   => array( AttributeType::Bool, 'label' => 'Debug', 'default' => false, 'required' => false),
         );
     }
 
@@ -301,6 +390,44 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
     }
 
     /**
+     * @param array|BaseModel $values
+     */
+    public function setSettings($values)
+    {
+        if (!$values)
+        {
+            $values = array();
+        }
+
+        if (is_array($values))
+        {
+            // Merge in any values that are stored in craft/config/avataxtaxadjuster.php
+            foreach ($this->getSettings() as $key => $value)
+            {
+                if(substr($key, 0, 8) === 'shipFrom')
+                {
+                    $shipFrom = craft()->config->get('shipFrom', 'avataxtaxadjuster');
+                    $shipFromKey = lcfirst(str_replace('shipFrom', '', $key));
+                    if(!empty($shipFrom[ $shipFromKey]))
+                    {
+                        $values[$key] = $shipFrom[$shipFromKey];
+                    }
+                }
+                else
+                {
+                    $configValue = craft()->config->get($key, 'avataxtaxadjuster');
+                    if ($configValue !== null)
+                    {
+                        $values[$key] = $configValue;
+                    }
+                }
+            }
+        }
+
+        parent::setSettings($values);
+    }
+
+    /**
      * Define custom CP routes.
      *
      * @return array
@@ -313,10 +440,17 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         );
     }
 
+    /**
+     * Register our tax adjuster.
+     * https://craftcommerce.com/docs/adjusters#ordering-adjustments
+     *
+     * @return array
+     */
+    
     public function commerce_registerOrderAdjusters(){
 
         return [
-            new \Commerce\Adjusters\AvataxTaxAdjuster
+            601 => new \Commerce\Adjusters\AvataxTaxAdjuster
         ];
     }
 

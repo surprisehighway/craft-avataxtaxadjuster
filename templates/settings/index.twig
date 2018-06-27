@@ -20,6 +20,14 @@
 
 {% import '_includes/forms' as forms %}
 
+{% macro configWarning(setting) -%}
+    {{ "This is being overridden by the {setting} config setting in your avataxtaxadjuster.php config file."|t({
+        setting: setting
+    })|raw }}
+{%- endmacro %}
+
+{% from _self import configWarning %}
+
 {% block content %}
 
     <input type="hidden" name="action" value="plugins/savePluginSettings">
@@ -30,11 +38,13 @@
     <h2>AvaTax Environment</h2>
 
     {{ forms.selectField({
-        label: '',
+        label:        '',
         instructions: 'Select your AvaTax environment.',
-        id: 'environment',
-        name: 'environment',
-        value: settings['environment'],
+        id:           'environment',
+        name:         'environment',
+        required:     true,
+        value:        settings.environment,
+        warning:      (craft.config.get('environment', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('environment'),
         'options': {
             'production' : 'Production',
             'sandbox' : 'Sandbox'
@@ -50,32 +60,37 @@
     <h2>Production Account</h2>
 
     {{ forms.textField({
-        label: 'Account ID',
+        label:        'Account ID',
         instructions: 'Enter your Avalara account ID here. It will be a ten-digit number (e.g. 1100012345).',
-        id: 'accountId',
-        name: 'accountId',
-        value: settings['accountId'],
-        errors: settings.getErrors('accountId')
+        id:           'accountId',
+        name:         'accountId',
+        value:        settings['accountId'],
+        required:     true,
+        warning:      (craft.config.get('accountId', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('accountId'),
+        errors:       settings.getErrors('accountId')
         })
     }}
 
     {{ forms.textField({
-        label: 'License Key',
+        label:        'License Key',
         instructions: 'Enter your license key here. It will be a 16-character string (e.g. 1A2B3C4D5E6F7G8H).',
-        id: 'licenseKey',
-        name: 'licenseKey',
-        value: settings['licenseKey'],
-        errors: settings.getErrors('licenseKey')
+        id:           'licenseKey',
+        name:         'licenseKey',
+        value:        settings.licenseKey,
+        required:     true,
+        warning:      (craft.config.get('licenseKey', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('licenseKey'),
+        errors:       settings.getErrors('licenseKey')
         })
     }}
 
     {{ forms.textField({
-        label: 'Company Code',
-        instructions: 'Enter your company code here. See: https://help.avalara.com/004_AvaTax_Integrations/002_All_About_Company_Codes',
-        id: 'companyCode',
-        name: 'companyCode',
-        value: settings['companyCode'],
-        errors: settings.getErrors('companyCode')
+        label:        'Company Code',
+        instructions: 'Enter your [company code](https://help.avalara.com/004_AvaTax_Integrations/002_All_About_Company_Codes) here.',
+        id:           'companyCode',
+        name:         'companyCode',
+        value:        settings['companyCode'],
+        warning:      (craft.config.get('companyCode', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('companyCode'),
+        errors:       settings.getErrors('companyCode')
         })
     }}
 
@@ -84,32 +99,185 @@
     <h2>Sandbox Account</h2>
 
     {{ forms.textField({
-        label: 'Account ID',
+        label:        'Account ID',
         instructions: 'Enter your Avalara account ID here.',
-        id: 'sandboxAccountId',
-        name: 'sandboxAccountId',
-        value: settings['sandboxAccountId'],
-        errors: settings.getErrors('sandboxAccountId')
+        id:           'sandboxAccountId',
+        name:         'sandboxAccountId',
+        value:        settings['sandboxAccountId'],
+        warning:      (craft.config.get('sandboxAccountId', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('sandboxAccountId'),
+        errors:       settings.getErrors('sandboxAccountId')
         })
     }}
 
     {{ forms.textField({
-        label: 'License Key',
+        label:        'License Key',
         instructions: 'Enter your license key here.',
-        id: 'sandboxLicenseKey',
-        name: 'sandboxLicenseKey',
-        value: settings['sandboxLicenseKey'],
-        errors: settings.getErrors('sandboxLicenseKey')
+        id:           'sandboxLicenseKey',
+        name:         'sandboxLicenseKey',
+        value:        settings.sandboxLicenseKey,
+        warning:      (craft.config.get('sandboxLicenseKey', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('sandboxLicenseKey'),
+        errors:       settings.getErrors('sandboxLicenseKey')
         })
     }}
 
     {{ forms.textField({
-        label: 'Company Code',
+        label:        'Company Code',
         instructions: 'Enter your company code here.',
-        id: 'sandboxCompanyCode',
-        name: 'sandboxCompanyCode',
+        id:           'sandboxCompanyCode',
+        name:         'sandboxCompanyCode',
         value: settings['sandboxCompanyCode'],
-        errors: settings.getErrors('sandboxCompanyCode')
+        warning:      (craft.config.get('sandboxCompanyCode', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('sandboxCompanyCode'),
+        errors:       settings.getErrors('sandboxCompanyCode')
+        })
+    }}
+
+    <hr>
+
+    <h2>Origin Ship From Address</h2>
+
+    {% if(craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)) %}
+        <div class="field">
+            <p class="warning">Origin Ship From Address is being overridden by the shipFrom config setting in your avataxtaxadjuster.php config file.</p>
+        </div>
+    {% endif %}
+
+    {{ forms.textField({
+        label:        'Name',
+        instructions: '',
+        id:           'shipFromName',
+        name:         'shipFromName',
+        value:        settings.shipFromName,
+        required:     true,
+        disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+        errors:       settings.getErrors('shipFromName')
+        })
+    }}
+
+    {{ forms.textField({
+        label:        'Street 1',
+        instructions: '',
+        id:           'shipFromStreet1',
+        name:         'shipFromStreet1',
+        value:        settings.shipFromStreet1,
+        required:     true,
+        disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+        errors:       settings.getErrors('shipFromStreet1')
+        })
+    }}
+
+    {{ forms.textField({
+        label:        'Street 2',
+        instructions: '',
+        id:           'shipFromStreet2',
+        name:         'shipFromStreet2',
+        value:        settings.shipFromStreet2,
+        disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+        errors:       settings.getErrors('shipFromStreet2')
+        })
+    }}
+
+    {{ forms.textField({
+        label:        'Street 3',
+        instructions: '',
+        id:           'shipFromStreet3',
+        name:         'shipFromStreet3',
+        value:        settings.shipFromStreet3,
+        disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+        errors:       settings.getErrors('shipFromStreet3')
+        })
+    }}
+
+    <div class="grid" data-cols="2" data-mode="pct">
+        <div class="item" data-colspan="1">
+            {{ forms.textField({
+                label: 'City',
+                instructions: '',
+                id:           'shipFromCity',
+                name:         'shipFromCity',
+                value:        settings.shipFromCity,
+                required:     true,
+                disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+                errors:       settings.getErrors('shipFromCity')
+                })
+            }}
+        </div>
+        <div class="item" data-colspan="1">
+            {{ forms.textField({
+                label:        'State',
+                instructions: '',
+                id:           'shipFromState',
+                name:         'shipFromState',
+                value:        settings.shipFromState,
+                required:     true,
+                disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+                errors:       settings.getErrors('shipFromState')
+                })
+            }} 
+        </div>
+    </div>
+
+    <div class="grid" data-cols="2" data-mode="pct">
+        <div class="item" data-colspan="1">
+            {{ forms.textField({
+                label:        'Country',
+                instructions: '',
+                id:           'shipFromCountry',
+                name:         'shipFromCountry',
+                value:        settings.shipFromCountry,
+                required:     true,
+                disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+                errors:       settings.getErrors('shipFromCountry')
+                })
+            }}
+        </div>
+        <div class="item" data-colspan="1">
+            {{ forms.textField({
+                label:        'Zip Code',
+                instructions: '',
+                id:           'shipFromZipCode',
+                name:         'shipFromZipCode',
+                value:        settings.shipFromZipCode,
+                required:     true,
+                disabled:     (craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)),
+                errors:       settings.getErrors('shipFromZipCode')
+                })
+            }}          
+        </div>
+    </div>
+
+    {% if(craft.config.get('shipFrom', 'avataxtaxadjuster') is not sameas(null)) %}
+        <div class="field">
+            <p class="warning">Origin Ship From Address is being overridden by the shipFrom config setting in your avataxtaxadjuster.php config file.</p>
+        </div>
+    {% endif %}
+
+    <hr>
+
+    <h2>Default Tax Codes</h2>
+
+    {{ forms.textField({
+        label:        'Default Tax Code',
+        instructions: 'The default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) to use for products.',
+        id:           'defaultTaxCode',
+        name:         'defaultTaxCode',
+        value:        settings.defaultTaxCode,
+        required:     true,
+        disabled:     (craft.config.get('defaultTaxCode', 'avataxtaxadjuster') is not sameas(null)),
+        warning:      (craft.config.get('defaultTaxCode', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('defaultTaxCode'),
+        errors:       settings.getErrors('defaultTaxCode')
+        })
+    }}
+
+    {{ forms.textField({
+        label:        'Default Shipping Code',
+        instructions: 'The default [Avalara Tax Code](https://taxcode.avatax.avalara.com/) to use for shipping.',
+        id:           'defaultShippingCode',
+        name:         'defaultShippingCode',
+        value:        settings.defaultShippingCode,
+        required:     true,
+        disabled:     (craft.config.get('defaultShippingCode', 'avataxtaxadjuster') is not sameas(null)),
+        warning:      (craft.config.get('defaultShippingCode', 'avataxtaxadjuster') is not sameas(null)) ? configWarning('defaultShippingCode'),
+        errors:       settings.getErrors('defaultShippingCode')
         })
     }}
 
@@ -126,12 +294,17 @@
         </div>
 
         {{ forms.lightswitch({
-            id: 'enableTaxCalculation',
-            name: 'enableTaxCalculation',
-            on: settings['enableTaxCalculation'],
-            errors: settings.getErrors('enableTaxCalculation')
+            id:       'enableTaxCalculation',
+            name:     'enableTaxCalculation',
+            on:       settings.enableTaxCalculation,
+            disabled: (craft.config.get('enableTaxCalculation', 'avataxtaxadjuster') is not sameas(null)),
+            errors:   settings.getErrors('enableTaxCalculation')
             })
         }}
+
+        {% if (craft.config.get('enableTaxCalculation', 'avataxtaxadjuster') is not sameas(null)) %}
+            <p class="warning">{{ configWarning('enableTaxCalculation') }}</p>
+        {% endif %}
     </div>
 
     <div class="field">
@@ -143,12 +316,17 @@
         </div>
 
         {{ forms.lightswitch({
-            id: 'enableCommitting',
-            name: 'enableCommitting',
-            on: settings['enableCommitting'],
-            errors: settings.getErrors('enableCommitting')
+            id:       'enableCommitting',
+            name:     'enableCommitting',
+            on:       settings.enableCommitting,
+            disabled: (craft.config.get('enableCommitting', 'avataxtaxadjuster') is not sameas(null)),
+            errors:   settings.getErrors('enableCommitting')
             })
         }}
+
+        {% if (craft.config.get('enableCommitting', 'avataxtaxadjuster') is not sameas(null)) %}
+            <p class="warning">{{ configWarning('enableCommitting') }}</p>
+        {% endif %}
     </div>
 
     <div class="field">
@@ -160,12 +338,17 @@
         </div>
 
         {{ forms.lightswitch({
-            id: 'enableAddressValidation',
-            name: 'enableAddressValidation',
-            on: settings['enableAddressValidation'],
-            errors: settings.getErrors('enableAddressValidation')
+            id:       'enableAddressValidation',
+            name:     'enableAddressValidation',
+            on:       settings.enableAddressValidation,
+            disabled: (craft.config.get('enableAddressValidation', 'avataxtaxadjuster') is not sameas(null)),
+            errors:  settings.getErrors('enableAddressValidation')
             })
         }}
+        
+        {% if (craft.config.get('enableAddressValidation', 'avataxtaxadjuster') is not sameas(null)) %}
+            <p class="warning">{{ configWarning('enableAddressValidation') }}</p>
+        {% endif %}
     </div>
 
     <hr>
@@ -181,12 +364,17 @@
         </div>
 
         {{ forms.lightswitch({
-            id: 'debug',
-            name: 'debug',
-            on: settings['debug'],
-            errors: settings.getErrors('debug')
+            id:       'debug',
+            name:     'debug',
+            on:       settings.debug,
+            disabled: (craft.config.get('debug', 'avataxtaxadjuster') is not sameas(null)),
+            errors:   settings.getErrors('debug')
             })
         }}
+
+        {% if (craft.config.get('debug', 'avataxtaxadjuster') is not sameas(null)) %}
+            <p class="warning">{{ configWarning('debug') }}</p>
+        {% endif %}
     </div>
 
     {% endnamespace %}

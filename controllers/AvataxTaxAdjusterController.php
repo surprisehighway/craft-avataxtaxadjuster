@@ -28,7 +28,7 @@ class AvataxTaxAdjusterController extends BaseController
 		$settings = $plugin->getSettings();
 
 		$this->renderTemplate('avataxtaxadjuster/settings/index', array(
-			'settings' => $settings,
+			'settings' => $settings
 		));
 	}
 }

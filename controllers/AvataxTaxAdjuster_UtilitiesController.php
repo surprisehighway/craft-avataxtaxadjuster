@@ -99,7 +99,7 @@ class AvataxTaxAdjuster_UtilitiesController extends BaseController
 
 						if(!empty($response[1]))
 						{
-							$logEntryArray['response'] = $response[1];
+							$logEntryArray['response'] = json_decode($response[1]);
 						 	$logEntryArray['message'] = $response[0];
 						}
 
@@ -107,7 +107,7 @@ class AvataxTaxAdjuster_UtilitiesController extends BaseController
 
 						if(!empty($request[1]))
 						{
-							$logEntryArray['request'] = $request[1];
+							$logEntryArray['request'] = json_decode($request[1]);
 						 	$logEntryArray['message'] = $request[0];
 						}
 
