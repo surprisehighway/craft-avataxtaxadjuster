@@ -202,7 +202,7 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
             $newTaxCategoryModel = Commerce_TaxCategoryModel::populateModel( array(
                 'name' => 'Avatax',
                 'handle' => 'avatax',
-                'description' => 'Calculate tax rates using Avatax Avatax',
+                'description' => 'Calculate tax rates using Avalara AvaTax',
                 'default' => FALSE,
             ) );
 
@@ -440,10 +440,17 @@ class AvataxTaxAdjusterPlugin extends BasePlugin
         );
     }
 
+    /**
+     * Register our tax adjuster.
+     * https://craftcommerce.com/docs/adjusters#ordering-adjustments
+     *
+     * @return array
+     */
+    
     public function commerce_registerOrderAdjusters(){
 
         return [
-            new \Commerce\Adjusters\AvataxTaxAdjuster
+            601 => new \Commerce\Adjusters\AvataxTaxAdjuster
         ];
     }
 
