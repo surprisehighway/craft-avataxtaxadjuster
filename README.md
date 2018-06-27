@@ -1,6 +1,6 @@
 # AvaTax Tax Adjuster plugin for Craft Commerce
 
-Calculates tax rates with Avalara AvaTax
+Calculate and add sales tax to an order's base tax using Avalara's AvaTax service.
 
 This plugin is in beta and bugs may be present. Please document any issues you encounter at our [Github Issues](https://github.com/surprisehighway/craft-avataxtaxadjuster/issues) page.
 
@@ -9,24 +9,20 @@ This plugin is in beta and bugs may be present. Please document any issues you e
 
 To install the AvaTax Tax Adjuster plugin, follow these steps:
 
-1. Download & unzip the file and place the `avataxtaxadjuster` directory into your `craft/plugins` directory
-2.  -OR- do a `git clone https://github.com/surprisehighway/craft-avataxtaxadjuster.git avataxtaxadjuster` directly into your `craft/plugins` folder.  You can then update it with `git pull`
-3.  -OR- install with Composer via `composer require surprisehighway/avataxtaxadjuster`
-4. Install plugin in the Craft Control Panel under Settings > Plugins
-5. The plugin folder should be named `avataxtaxadjuster` for Craft to see it. GitHub recently started appending `-master` (the branch name) to the name of the folder for zip file downloads.
+1. Download & unzip the file and place the `avataxtaxadjuster` directory into your `craft/plugins` directory.
+2. Navigate to `Settings > Plugins` and click *Install* to install plugin.
 
 AvaTax Tax Adjuster works on Craft 2.6.x
 
-## AvaTax Tax Adjuster Overview
+## Setup Overview
 
-Calculate and add sales tax to an order's base tax using Avalara's AvaTax service.
+Setup and configuration is detailed below, but here's a quick overview of what you'll need to do get started:
 
-## Configuring AvaTax Ship From Origin
-
-1. Specify a valid origin address to ship from.
-
-![Origin](resources/plugin-origin.png)
-
+1. Configure the plugin settings with your Avalara account info and test the connection.
+2. Configure the plugin settings with your origin address and default tax codes.
+3. Set each of your Product Types to use the "Avatax" tax category.
+4. Optionally add the product-specfic tax code field to your Product Type fields to allow per-product tax codes.
+5. Optionally add the customer usage type field to your User fields to set up tax-exempt customers.
 
 ## Configuring AvaTax Account Connection
 
@@ -37,6 +33,12 @@ Calculate and add sales tax to an order's base tax using Avalara's AvaTax servic
 5. Click the *Save* button to save your settings.
 
 ![Account Settings](resources/plugin-settings.png)
+
+## Configuring AvaTax Ship From Origin
+
+1. Specify a valid origin address to ship from.
+
+![Origin](resources/plugin-origin.png)
 
 ## Configuring AvaTax Plugin Options
 
