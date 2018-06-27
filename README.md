@@ -37,6 +37,7 @@ Setup and configuration is detailed below, but here's a quick overview of what y
 ## Configuring AvaTax Ship From Origin
 
 1. Specify a valid origin address to ship from.
+2. Click the *Save* button to save your settings.
 
 ![Origin](resources/plugin-origin.png)
 
