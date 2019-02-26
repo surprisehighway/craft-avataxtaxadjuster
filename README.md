@@ -2,7 +2,18 @@
 
 Calculate and add sales tax to an order's base tax using Avalara's AvaTax service.
 
-This plugin is in beta and bugs may be present. Please document any issues you encounter at our [Github Issues](https://github.com/surprisehighway/craft-avataxtaxadjuster/issues) page.
+<a href="https://help.avalara.com/001_Avalara_AvaTax/Find_Your_Home_Page/CraftCommerce_by_Surprise_Highway">
+	<img src="resources/plugin-logo.png" alt="Avalara Certified" style="width:150px;height:150px;">
+</a>
+
+## Requirements
+
+AvaTax Tax Adjuster works on Craft 2.6.x and Commerce 1.x.
+
+**This version is no longer under active development** but will still be supported. Please document any issues you encounter at our [Github Issues](https://github.com/surprisehighway/craft-avatax/issues) page.
+
+
+**[Craft Avatax 2.0](https://github.com/surprisehighway/craft-avatax) is available for Craft 3.x and Commerce 2.x.**
 
 
 ## Installation
@@ -11,8 +22,6 @@ To install the AvaTax Tax Adjuster plugin, follow these steps:
 
 1. Download & unzip the file and place the `avataxtaxadjuster` directory into your `craft/plugins` directory.
 2. Navigate to `Settings > Plugins` and click *Install* to install plugin.
-
-AvaTax Tax Adjuster works on Craft 2.6.x
 
 ## Setup Overview
 
