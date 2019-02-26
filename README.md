@@ -3,7 +3,7 @@
 Calculate and add sales tax to an order's base tax using Avalara's AvaTax service.
 
 <a href="https://help.avalara.com/001_Avalara_AvaTax/Find_Your_Home_Page/CraftCommerce_by_Surprise_Highway">
-	<img src="resources/plugin-logo.png" alt="Avalara Certified" style="width:150px;height:150px;">
+	<img src="resources/plugin-logo.png" alt="Avalara Certified">
 </a>
 
 ## Requirements
