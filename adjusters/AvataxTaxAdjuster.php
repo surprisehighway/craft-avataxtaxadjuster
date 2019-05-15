@@ -11,7 +11,7 @@ class AvataxTaxAdjuster implements Commerce_AdjusterInterface {
 
   public function adjust(Commerce_OrderModel &$order, array $lineItems = []){
 
-    if( $order->shippingAddress !== NULL && sizeof($order->lineItems) > 0)
+    if ($order->shippingAddress !== null && $order->shippingMethod != null && sizeof($order->lineItems) > 0)
     {
       $taxService = new SalesTaxService;
 
