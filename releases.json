@@ -1,5 +1,13 @@
 [
 	{
+	    "version": "1.0.8",
+	    "downloadUrl": "https://github.com/surprisehighway/craft-avataxtaxadjuster/archive/master.zip",
+	    "date": "2019-07-15T05:31:39.458Z",
+	    "notes": [
+		    "[Improved] Reduce calls to the Avatax Tax Service."
+		]
+	},
+	{
 	    "version": "1.0.7",
 	    "downloadUrl": "https://github.com/surprisehighway/craft-avataxtaxadjuster/archive/master.zip",
 	    "date": "2018-06-27T05:31:39.458Z",
