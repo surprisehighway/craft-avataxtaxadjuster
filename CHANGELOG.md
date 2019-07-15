@@ -1,5 +1,11 @@
 # Avatax Tax Adjuster Changelog
 
+## 1.0.8 -- 2019.7.15
+
+### Improved
+
+* Reduce calls to the Avatax Tax Service
+
 ## 1.0.7 -- 2018.6.27
 
 ### Added
