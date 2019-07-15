@@ -495,7 +495,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         $shipping = $order->totalShippingCost;
         $discount = $order->totalDiscount;
         $tax = $order->totalTax;
-        $total = $order->totalPrice;
+        $total = floatval($order->totalPrice);
 
         $address1 = $order->shippingAddress->address1;
         $address2 = $order->shippingAddress->address2;
