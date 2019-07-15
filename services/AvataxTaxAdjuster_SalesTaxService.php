@@ -16,6 +16,7 @@ namespace Craft;
 
 require CRAFT_PLUGINS_PATH.'/avataxtaxadjuster/vendor/autoload.php';
 use Avalara\AvaTaxClient as AvaTaxClient;
+use Commerce\Helpers\CommerceCurrencyHelper;
 
 class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
 {
@@ -495,7 +496,7 @@ class AvataxTaxAdjuster_SalesTaxService extends BaseApplicationComponent
         $shipping = $order->totalShippingCost;
         $discount = $order->totalDiscount;
         $tax = $order->totalTax;
-        $total = floatval($order->totalPrice);
+        $total = CommerceCurrencyHelper::round($order->totalPrice);
 
         $address1 = $order->shippingAddress->address1;
         $address2 = $order->shippingAddress->address2;
